@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>产线实时看板</title>
+    <link rel="stylesheet" href="assets/libs/layui/css/layui.css"/>
+    <link rel="stylesheet" href="assets/module/admin.css?v=318"/>
+<style>
+    body{
+        background: #010C45;
+        /*opacity: 0.5;*/
+        /*background: #323355;*/
+    }
+.layui-card-header {
+    background: #0C1B5C;
+    border-bottom: 1px solid #058DAD;
+    color: #FFEB7B
+}
+.layui-card-body {
+    opacity: 0.95;
+    background: #0D174C;
+}
+    /** 统计快捷方式样式 */
+    .console-link-block {
+        font-size: 16px;
+        padding: 20px 20px;
+        border-radius: 4px;
+        background-color: #40D4B0;
+        color: #FFFFFF !important;
+        box-shadow: 0 2px 3px rgba(0, 0, 0, .05);
+        position: relative;
+        overflow: hidden;
+        display: block;
+    }
+
+    .console-link-block .console-link-block-num {
+        font-size: 40px;
+        margin-bottom: 5px;
+        opacity: .9;
+    }
+
+    .console-link-block .console-link-block-text {
+        opacity: .8;
+    }
+
+    .console-link-block .console-link-block-icon {
+        position: absolute;
+        top: 50%;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 50px;
+        line-height: 50px;
+        margin-top: -25px;
+        color: #FFFFFF;
+        opacity: .8;
+    }
+
+    .console-link-block .console-link-block-band {
+        color: #fff;
+        width: 120px;
+        font-size: 14px;
+        padding: 4px 0 3px 0;
+        background-color: #E32A16;
+        line-height: inherit;
+        text-align: center;
+        position: absolute;
+        top: 12px;
+        right: -35px;
+        transform-origin: center;
+        transform: rotate(45deg) scale(.8);
+        opacity: .95;
+        z-index: 2;
+    }
+
+    /** //统计快捷方式样式 */
+
+    /** 设置每个快捷块的颜色 */
+    .layui-row > div:nth-child(1) .console-link-block {
+        background-color: #0B63F6;
+    }
+    .layui-row > div:nth-child(2) .console-link-block {
+        background-color: #DF98FA;
+    }
+    .layui-row > div:nth-child(3) .console-link-block {
+        background-color: #13E2DA;
+    }
+
+    .layui-row > div:nth-child(4) .console-link-block {
+        background-color: #00B3CC;
+    }
+
+    .layui-row > div:nth-child(5) .console-link-block {
+        background-color: #FEAA4F;
+    }
+
+    .layui-row > div:last-child .console-link-block {
+        background-color: #9BC539;
+    }
+
+/*.layui-table-cell{
+    height:40px;
+    line-height: 36px;
+}*/
+    .content-middle{
+        color: #FFFFFF;
+        font-size: 42px;
+        font-weight: 600;
+        height: 60px;
+        line-height: 60px;
+
+        letter-spacing:2px;
+        text-align: center;
+        background: #3900A6;
+        /*background: #282c3e;*/
+        border-radius: 5px;
+        padding: 15px 20px;
+        margin-bottom: 15px;
+    }
+
+
+.tablebox {
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    margin: 0px auto;
+    background-color: rgba(6,26,103,1);
+}
+
+.tbl-header {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 999;
+}
+
+.tbl-body {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.tablebox table {
+    width: 100%;
+}
+
+.tablebox table th,
+.tablebox table td {
+    font-size: 14px;
+    color: #7ca6f4;
+    line-height: 40px;
+    text-align: center;
+}
+
+.tablebox table tr th {
+    background: #022852;
+    cursor: pointer;
+}
+
+.tablebox table tr td {
+    border-bottom: 1px solid #202e64;
+}
+
+
+ tr td img{
+    width: 25px;
+    margin-top: 5px;
+}
+ tr td p{
+    width: 60px;
+    height: 20px;
+    font-weight: bold;
+    border-radius: 5px;
+    margin: auto;
+    text-align: center;
+    line-height: 20px;
+    color: #000000;
+}
+.cf1{
+    background: #c20000;
+}
+.cf2{
+    background: #ee880c;
+}
+.cf3{
+    background: #f8f400;
+}
+
+</style>
+</head>
+<script>
+// 背景
+window.requestAnimFrame = (function() {
+  return (
+    window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    window.oRequestAnimationFrame ||
+    window.msRequestAnimationFrame ||
+    function(callback) {
+      window.setTimeout(callback);
+    }
+  );
+});
+
+function init(elemid) {
+  let canvas = document.getElementById(elemid),
+    c = canvas.getContext("2d"),
+    w = (canvas.width = window.innerWidth),
+    h = (canvas.height = window.innerHeight);
+  c.fillStyle = "rgba(30,30,30,1)";
+  c.fillRect(0, 0, w, h);
+  return {c:c,canvas:canvas};
+}
+</script>
+<body class="no-scrollbar">
+<canvas id='canvas' width="100%" height="100%" style="position:absolute;z-index:-2;filter: alpha(opacity:20);opacity: 0.5"></canvas>
+<!-- 正文开始 -->
+<div class="layui-fluid ew-console-wrapper">
+    <div class="content-middle">
+        <span>浙江创区电控车间CDU产线实况</span>
+        <span id="showTime" style="font-size:14px;float: right;"></span>
+    </div>
+  <script>
+    var t = null;
+    t = setTimeout(time,1000);//開始运行
+    function time()
+    {
+       clearTimeout(t);//清除定时器
+       dt = new Date();
+    var y=dt.getFullYear();
+    var mt=dt.getMonth()+1;
+    var day=dt.getDate();
+       var h=dt.getHours();//获取时
+       var m=dt.getMinutes();//获取分
+       var s=dt.getSeconds();//获取秒
+       document.getElementById("showTime").innerHTML = y+"年"+mt+"月"+day+" "+h+"时"+m+"分"+s+"秒";
+       t = setTimeout(time,1000); //设定定时器，循环运行
+    }
+  </script>
+
+
+    <!-- 快捷方式 -->
+    <div class="layui-row layui-col-space15" id="workshop"></div>
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-xs12 layui-col-md4">
+            <div class="layui-card">
+                <div class="layui-card-header">今日计划</div>
+                <div class="layui-card-body" style="height: 282px;overflow: hidden;background: #192355">
+                    <div id="lb" style="width: 100%;height: 277px;"></div>
+                </div>
+            </div>
+            <div class="layui-card">
+                <div class="layui-card-header">生产缺料情况统计</div>
+                <div class="layui-card-body" style="height: 400px;overflow: hidden;">
+                    <div class="tablebox">
+
+                            <div class="tbl-header">
+                                <table border="0" cellspacing="0" cellpadding="0">
+                                    <thead>
+                                        <tr>
+                                            <th>头像</th>
+                                            <th>姓名</th>
+                                            <th>处分时间</th>
+                                            <th>处分原因</th>
+                                            <th>处分类型</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody style="opacity:0;"></tbody>
+                                </table>
+                            </div>
+
+                            <div class="tbl-body">
+                                <table border="0" cellspacing="0" cellpadding="0">
+                                    <thead>
+                                        <tr>
+                                            <th>头像</th>
+                                            <th>姓名</th>
+                                            <th>处分时间</th>
+                                            <th>处分原因</th>
+                                            <th>处分类型</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><img src="./image/rx.png" alt=""></td>
+                                            <td>张飞1</td>
+                                            <td>2020.8.30</td>
+                                            <td>打架斗殴</td>
+                                            <td><p class="cf1">开除学籍</p></td>
+                                        </tr>
+                                        <tr>
+                                            <td><img src="./image/rx.png" alt=""></td>
+                                            <td>张飞2</td>
+                                            <td>2020.8.30</td>
+                                            <td>打架斗殴</td>
+                                            <td><p class="cf2">留校查看</p></td>
+                                        </tr>
+                                        <tr>
+                                            <td><img src="./image/rx.png" alt=""></td>
+                                            <td>张飞3</td>
+                                            <td>2020.8.30</td>
+                                            <td>打架斗殴</td>
+                                            <td><p class="cf3">开除学籍</p></td>
+                                        </tr>
+                                        <tr>
+                                            <td><img src="./image/rx.png" alt=""></td>
+                                            <td>张飞4</td>
+                                            <td>2020.8.30</td>
+                                            <td>打架斗殴</td>
+                                            <td><p class="cf1">开除学籍</p></td>
+                                        </tr>
+                                        <tr>
+                                            <td><img src="./image/rx.png" alt=""></td>
+                                            <td>张飞5</td>
+                                            <td>2020.8.30</td>
+                                            <td>打架斗殴</td>
+                                            <td><p class="cf2">留校查看</p></td>
+                                        </tr>
+                                        <tr>
+                                            <td><img src="./image/rx.png" alt=""></td>
+                                            <td>张飞6</td>
+                                            <td>2020.8.30</td>
+                                            <td>打架斗殴</td>
+                                            <td><p class="cf3">开除学籍</p></td>
+                                        </tr>
+
+
+
+                                        <tr>
+                                            <td><img src="./image/rx.png" alt=""></td>
+                                            <td>张飞7</td>
+                                            <td>2020.8.30</td>
+                                            <td>打架斗殴</td>
+                                            <td><p class="cf3">开除学籍</p></td>
+                                        </tr>
+                                        <tr>
+                                            <td><img src="./image/rx.png" alt=""></td>
+                                            <td>张飞8</td>
+                                            <td>2020.8.30</td>
+                                            <td>打架斗殴</td>
+                                            <td><p class="cf1">开除学籍</p></td>
+                                        </tr>
+                                        <tr>
+                                            <td><img src="./image/rx.png" alt=""></td>
+                                            <td>张飞9</td>
+                                            <td>2020.8.30</td>
+                                            <td>打架斗殴</td>
+                                            <td><p class="cf2">留校查看</p></td>
+                                        </tr>
+                                        <tr>
+                                            <td><img src="./image/rx.png" alt=""></td>
+                                            <td>张飞10</td>
+                                            <td>2020.8.30</td>
+                                            <td>打架斗殴</td>
+                                            <td><p class="cf3">开除学籍</p></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-xs12 layui-col-md8">
+            <div class="layui-card">
+                <div class="layui-card-header">当前生产订单实况</div>
+                <div class="layui-card-body" style="height: 760px;overflow: hidden;">
+                    <div id="rb" style="width: 100%;height:750px;background: #0D174C;opacity: 0.85"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- js部分 -->
+
+<script type="text/html" id="orderInfo">
+    <div class="layui-col-md2 layui-col-sm4 layui-col-xs6">
+        <div class="console-link-block">
+            <div class="console-link-block-num">{{d.person}}</div>
+            <div class="console-link-block-text">上工人数</div>
+            <i class="console-link-block-icon layui-icon layui-icon-group"></i>
+            <!-- <div class="console-link-block-band">待审批</div> -->
+        </div>
+    </div>
+    <div class="layui-col-md2 layui-col-sm4 layui-col-xs6">
+        <div class="console-link-block">
+            <div class="console-link-block-num">{{d.wd}}</div>
+            <div class="console-link-block-text">当前温度</div>
+            <i class="console-link-block-icon layui-icon layui-icon-light"></i>
+            <!-- <div class="console-link-block-band">待审批</div> -->
+        </div>
+    </div>
+    <div class="layui-col-md2 layui-col-sm4 layui-col-xs6">
+        <div class="console-link-block">
+            <div class="console-link-block-num">{{d.sd}}</div>
+            <div class="console-link-block-text">今日测试警报</div>
+            <i class="console-link-block-icon layui-icon layui-icon-snowflake"></i>
+            <div class="console-link-block-band">测试 NG</div>
+        </div>
+    </div>
+    <div class="layui-col-md2 layui-col-sm4 layui-col-xs6">
+        <div class="console-link-block">
+            <div class="console-link-block-num">{{d.over}}</div>
+            <div class="console-link-block-text">完工</div>
+            <i class="console-link-block-icon layui-icon layui-icon-face-smile"></i>
+            <!-- <div class="console-link-block-band">去查看</div> -->
+        </div>
+    </div>
+    <div class="layui-col-md2 layui-col-sm4 layui-col-xs6">
+        <div class="console-link-block">
+            <div class="console-link-block-num">{{d.relation}}</div>
+            <div class="console-link-block-text">未完工订单</div>
+            <i class="console-link-block-icon layui-icon layui-icon-service"></i>
+            <!-- <div class="console-link-block-band">去查看</div> -->
+        </div>
+    </div>
+    <div class="layui-col-md2 layui-col-sm4 layui-col-xs6">
+        <div class="console-link-block">
+            <div class="console-link-block-num">{{d.bad}}</div>
+            <div class="console-link-block-text">今日不良品</div>
+            <i class="console-link-block-icon layui-icon layui-icon-face-cry"></i>
+            <!-- <div class="console-link-block-band">待审批</div> -->
+        </div>
+    </div>
+</script>
+<script src="js/jquery-1.8.3.min.js"></script>
+<script src="js/scroll.js"></script>
+
+
+
+<script type="text/javascript" src="assets/libs/layui/layui.js"></script>
+<script src="assets/libs/echarts/echarts.min.js"></script>
+<script src="assets/libs/echarts/echartsTheme.js"></script>
+<script src='js/p5.js'></script>
+<script src="js/script.js"></script>
+<!-- <script src="theme/shine.js"></script> -->
+
+
+<script type="text/javascript">
+var MyMarhq = '';
+clearInterval(MyMarhq);
+var item = $('.tbl-body tbody tr').length
+console.log(item)
+
+
+if(item> 4){
+    $('.tbl-body tbody').html($('.tbl-body tbody').html()+$('.tbl-body tbody').html());
+    $('.tbl-body').css('top', '0');
+    var tblTop = 0;
+    var speedhq = 50; // 数值越大越慢
+    var outerHeight = $('.tbl-body tbody').find("tr").outerHeight();
+    function Marqueehq(){
+        if(tblTop <= -outerHeight*item){
+            tblTop = 0;
+        } else {
+            tblTop -= 1;
+        }
+        $('.tbl-body').css('top', tblTop+'px');
+    }
+
+    MyMarhq = setInterval(Marqueehq,speedhq);
+
+    // 鼠标移上去取消事件
+    $(".tbl-body tbody").hover(function (){
+        clearInterval(MyMarhq);
+    },function (){
+        clearInterval(MyMarhq);
+        MyMarhq = setInterval(Marqueehq,speedhq);
+    })
+
+}
+</script>
+
+
+<script>
+    layui.use(['layer','laytpl'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var laytpl = layui.laytpl;
+        var data = {person: 33,wd: "23,251", sd: "256", over: "16", relation: "130", bad: "109"}
+
+        var orderInfoTpl = orderInfo.innerHTML  //获取模板，即上面所定义的 <script id="orderInfo">
+            , orderInfoDiv = document.getElementById('workshop');  //视图 即上面的 <div id="orderInfoDiv">
+            laytpl(orderInfoTpl).render(data, function (html) { //渲染视图
+            orderInfoDiv.innerHTML = html;
+        });
+
+        draw_lb();
+
+        function draw_lb(){
+
+            var myChart = echarts.init(document.getElementById('lb'));
+            // var myChart = echarts.init(document.getElementById('lb'),'shine');
+            // 指定图表的配置项和数据
+            lb = {
+                // backgroundColor: '#192355',
+                title : {
+                    text: 'CDU233A(200台),VPU118C(400台)',
+                    top:10,
+                    left:8,
+                    textStyle:{
+                        fontSize: 18,
+                        color :'#FFF'
+                    }
+                },
+
+                tooltip : {
+                    formatter: "{a} <br/>{b} : {c}%"
+                },
+                series : [
+                    {
+                        name:'业务指标',
+                        type:'gauge',
+                        startAngle: 180,
+                        endAngle: 0,
+                        itemStyle:{
+                            // color:'#000066', //指针颜色
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                offset: 0,
+                                color: '#590FB7'
+                            }, {
+                                offset: 1,
+                                color: '#FF0076'
+                            }])
+                        },
+                        center : ['50%', '90%'],    // 默认全局居中
+                        radius : 200,
+                        axisLine: {            // 坐标轴线
+                            lineStyle: {       // 属性lineStyle控制线条样式
+                                // 和值为2
+                                color: [[0.25, '#594EF6'],[0.5, '#B14FF4'],[0.75, '#507EF6'],[1, '#F84EF2']], //4
+                                // color: [[0.5, '#594EF6'],[0.8, '#507EF6'],[1, '#FF6600']],
+                                width: 180,
+                                shadowColor : '#C2F651', //默认透明
+                                shadowBlur: 10
+                            }
+                        },
+                        axisTick: {            // 坐标轴小标记
+                            splitNumber: 10,   // 每份split细分多少段
+                            length :6,        // 属性length控制线长
+                        },
+                        axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
+                            // formatter: function(v){
+                            //     switch (v+''){
+                            //         // 4
+                            //         // case '25': return '25P';
+                            //         // case '50': return '50P';
+                            //         // case '75': return '75P';
+                            //         // case '100': return 'Over';
+                            //         // default: return '';
+                            //         case '30': return '25P';
+                            //         case '85': return '75P';
+                            //         case '100': return 'Over';
+                            //         default: return '';
+
+                            //     }
+                            // },
+                            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                                color: '#fff',
+                                fontSize: 15,
+                                fontWeight: 'bolder'
+                            }
+                        },
+                        pointer: {
+                            width:45,
+                            length: '95%',
+                            color: 'rgba(255, 255, 255, 0.8)'
+                        },
+                        title : {
+                            show : true,
+                            offsetCenter: [0, '-60%'],       // x, y，单位px
+                            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                                color: '#4EB3F1',
+                                fontSize: 28
+                            }
+                        },
+                        detail : {
+                            show : true,
+                            backgroundColor: 'rgba(0,0,0,0)',
+                            borderWidth: 0,
+                            borderColor: '#4EB3F1',
+                            width: 100,
+                            height: 40,
+                            offsetCenter: [0, 0],       // x, y，单位px
+                            formatter:'{value}%',
+                            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                                color: '#FFF',
+                                fontSize : 30
+                            }
+                        },
+                        data:[{value: 35, name: '完成率'}]
+                    }
+                ]
+            };
+
+            // 使用刚指定的配置项和数据显示图表。
+            myChart.setOption(lb);
+            window.addEventListener("resize",function(){
+                myChart.resize();
+            });
+        }
+
+
+
+
+        draw_rb({title:'102SC2108024(CDU233A)',data_x:['P板','K板','Q板','绝缘耐压测试','下线测试'],data_y1:[300,300,300,300,300],data_y2:[300,95,0,118,2],data_y3:[11,44,16,0,80]});
+
+        function draw_rb(res){
+
+            var myChart = echarts.init(document.getElementById('rb'));
+            myChart.showLoading();
+            var rb = {
+                    title : {
+                        text: res.title,
+                        top:20,
+                        left:10,
+                        bottom:35,
+                        textStyle:{
+                            fontSize: 24,
+                            color :'#FFF'
+                        }
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        x: 'right',
+                        data: ['计划产量','已关联','完工数量'],
+                        textStyle: {
+                            color: '#9191c2',
+                            fontSize: 16,
+                            padding: [0, 40, 0, 5],
+                        },
+                        padding: [35, 200, 0, 0],
+                    },
+                    toolbox: {
+                        show: false,
+                        feature: {
+                            mark: {show: false},
+                            dataView: {show: true, readOnly: false},
+                            magicType: {show: true, type: ['line', 'bar']},
+                            restore: {show: true},
+                            saveAsImage: {show: true}
+                        }
+                    },
+                    grid: {
+                        y: 120, y2: 50, x: 80, x2: 80,
+                        tooltip: {
+                            show: true
+                        }
+                    },
+                    calculable: true,
+                    yAxis: [
+                        {
+                            name: '产量（PCS）',
+                            nameTextStyle: {
+                                color: '#9191c2'
+                            },
+
+                              max: function(value){
+                                return value.max + 0.1*value.max
+                              },
+
+                            splitLine: {
+                                show: true,//去除网格线
+                                lineStyle: {
+                                    color: '#383756'
+                                },
+                            },
+                            type: 'value',
+                            axisLabel: {
+                                show: true,
+                                interval: 0,
+                                textStyle: {
+                                    color: '#9191c2'
+                                }
+                            },
+                            axisTick: {
+                                show: true
+                            },
+                            axisLine: {show: false}
+                        },
+
+                        {
+                            name: '工艺流程',
+                            nameTextStyle: {
+                                color: '#9191c2'
+                            },
+                            splitLine: {show: false},//去除网格线
+                            type: 'value',
+                            axisLabel: {
+                                show: true,
+                                interval: 0,
+                                textStyle: {
+                                    color: '#9191c2'
+                                }
+                            },
+                            axisTick: {
+                                show: false
+                            },
+                            axisLine: {show: false}
+                        },
+                    ],
+                    xAxis: {
+                        axisLabel: {
+                            interval: 0,
+                            textStyle: {
+                                fontSize: 20,
+                                color: '#FFF'
+                            },
+                            // margin-bottom: 20, //刻度标签与轴线之间的距离
+                            show: true
+                        },
+                        axisTick: {
+                            show: false
+                        },
+                        axisLine: {
+                            lineStyle: {
+                                color: '#383756'
+                            },
+                            show: false
+                        },
+                        data : res.data_x,
+                    },
+                    series: [
+                        {
+                            name: '计划产量',
+                            type: 'bar',
+                            barWidth: 42,
+                            smooth: true,
+                            itemStyle: {
+                                normal: {
+                                    label: {
+                                        show: true, //开启显示
+                                        position: 'top', //在上方显示
+                                        textStyle: { //数值样式
+                                            fontSize: 24,
+                                            color: '#F00EF3'
+                                        }
+                                    },
+                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                        offset: 0,
+                                        color: '#FF6B00'
+                                    }, {
+                                        offset: 1,
+                                        color: '#E233FF'
+                                    }]),
+                                }
+                            },
+                            symbol: 'emptydiamond',
+                            data:res.data_y1,
+                            barGap: '100%'
+                        },
+                        {
+                            name: '已关联',
+                            type: 'bar',
+                            barWidth: 42,
+                            smooth: true,
+                            itemStyle: {
+                                normal: {
+                                    label: {
+                                        show: true, //开启显示
+                                        position: 'top', //在上方显示
+                                        textStyle: { //数值样式
+                                            fontSize: 24,
+                                            color: '#7AA4EF'
+                                        }
+                                    },
+                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                        offset: 0,
+                                        color: '#DF98FA'
+                                    }, {
+                                        offset: 1,
+                                        color: '#9055FF'
+                                    }]),
+                                }
+                            },
+                            symbol: 'emptydiamond',
+                            data:res.data_y2,
+                            barGap: '100%'
+                        },
+                        {
+                            name: '完工数量',
+                            type: 'bar',
+                            barWidth: 42,
+                            itemStyle: {
+                                normal: {
+                                    label: {
+                                        show: true, //开启显示
+                                        position: 'top', //在上方显示
+                                        textStyle: { //数值样式
+                                            fontSize: 24,
+                                            color: '#F7BA88'
+                                        }
+                                    },
+                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                        offset: 0,
+                                        color: '#FF6600'
+                                    }, {
+                                        offset: 1,
+                                        color: '#F4F110'
+                                    }]),
+                                }
+                            },
+                            symbol: 'emptydiamond',
+                            data:res.data_y3,
+                            barGap: '100%'
+                        }
+                    ]
+                }
+
+
+
+
+            // 使用刚指定的配置项和数据显示图表。
+            myChart.setOption(rb);
+            myChart.hideLoading(); //隐藏加载动画
+            window.addEventListener("resize",function(){
+                myChart.resize();
+            });
+        }
+
+    });
+
+</script>
+</body>
+</html>

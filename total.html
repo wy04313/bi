@@ -1,0 +1,346 @@
+﻿<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>浙江创驱智能科技有限公司中控数据中心</title>
+<script type="text/javascript" src="js/jquery.js"></script>
+<link rel="stylesheet" href="css/comon0.css">
+<style type="text/css">
+  .main_title{
+      width: 220px;
+      height: 40px;
+      line-height: 38px;
+      /*background-color: #2C58A6;*/
+      border-radius: 18px;
+      position: absolute;
+      top: 255px;
+      left:50%;
+      margin-left: -110px;
+      color:#fff;
+      font-size: 18px;
+      font-weight: 600;
+      box-sizing: border-box;
+      padding-left: 45px;
+  }
+  .main_title img{
+      position: absolute;
+      top: 8px;
+      left: 20px;
+  }
+  .barbox tr{
+      height: 40px;
+  }
+  .barbox{
+      width: 100%;
+      margin-top: 10px;
+  }
+  .barbox table{
+      width: 100%;
+  }
+  .barbox thead tr{
+      height: 42px;
+  }
+  .barbox th{
+      font-size: 12px;
+      font-weight: 600;
+      color:#61d2f7;
+      text-align: center;
+  }
+  .barbox th:nth-child(1){
+
+  }
+  .barbox th:nth-child(2){
+
+  }
+  .barbox td{
+      color:#fff;
+      font-size: 10px;
+      text-align: center;
+  }
+  .barbox tbody tr:nth-child(1),
+  .barbox tbody tr:nth-child(3),
+  .barbox tbody tr:nth-child(5),
+  .barbox tbody tr:nth-child(7),
+  .barbox tbody tr:nth-child(9){
+      background-color: #072951;
+      box-shadow:-10px 0px 15px #2C58A6 inset,   /*左边阴影*/
+      10px 0px 15px #2C58A6 inset;  /*右边阴影*/
+  }
+
+  .con_div_text{
+      height: 100%;
+      width: 32%;
+      margin-right: 1.3%;
+  }
+  .con_div_text01{
+      width: 25%;
+      height: 100%;
+  }
+  .text01_img{
+      width: 40px;
+      height: 40px;
+      margin-left: 5%;
+    margin-top: 35px;
+  }
+  .left{
+      float: left;
+  }
+  .text01_div{
+      margin-top: 15px;
+      margin-left: 5%;
+      text-align: center;
+
+  }
+  .text01_div p{
+      line-height: 35px;
+  }
+  .text01_div p:nth-child(1){
+      font-size: 13px;
+      color: #ffffff;
+  }
+  .text01_div p:nth-child(2){
+      font-size: 28px;color: #ffff43;font-weight: 600;
+  }
+</style>
+
+</head>
+  <script>
+    $(window).load(function(){
+        $(".loading").fadeOut()
+    })
+    /****/
+    $(document).ready(function(){
+        var whei=$(window).width()
+        $("html").css({fontSize:whei/20})
+        $(window).resize(function(){
+            var whei=$(window).width()
+            $("html").css({fontSize:whei/20})
+        });
+    });
+  </script>
+	<script type="text/javascript" src="js/echarts.min.js"></script>
+	<script language="JavaScript" src="js/js.js"></script>
+<body>
+<div class="canvas" style="opacity: .2">
+	<iframe frameborder="0" src="js/index.html" style="width: 100%; height: 100%"></iframe>
+	</div>
+<div class="loading">
+  <div class="loadbox"> <img src="picture/loading.gif"> 页面加载中... </div>
+</div>
+<div class="head">
+  <h1>浙江创驱智能科技有限公司中控数据中心(三行四列)</h1>
+  <div class="weather"><img src="picture/weather.png"><span>多云转小雨</span><span id="showTime"></span></div>
+  <script>
+    var t = null;
+    t = setTimeout(time,1000);//開始运行
+    function time()
+    {
+       clearTimeout(t);//清除定时器
+       dt = new Date();
+    var y=dt.getFullYear();
+    var mt=dt.getMonth()+1;
+    var day=dt.getDate();
+       var h=dt.getHours();//获取时
+       var m=dt.getMinutes();//获取分
+       var s=dt.getSeconds();//获取秒
+       document.getElementById("showTime").innerHTML = y+"年"+mt+"月"+day+" "+h+"时"+m+"分"+s+"秒";
+       t = setTimeout(time,1000); //设定定时器，循环运行
+    }
+  </script>
+</div>
+
+<div class="mainbox">
+  <ul class="clearfix">
+    <li>
+      <div class="boxall" style="height: 3.2rem">
+        <div class="alltitle">温/湿度,耗电及良品率</div>
+        <div class="allnav" id="echart1"></div>
+        <div class="boxfoot"></div>
+      </div>
+      <div class="boxall" style="height: 3.2rem">
+        <div class="alltitle">近7日耗电量</div>
+        <div class="allnav" id="echart2"></div>
+        <div class="boxfoot"></div>
+      </div>
+      <div class="boxall" style="height: 3.2rem">
+        <!-- 三圆图 -->
+        <div style="height:100%; width: 100%;">
+        <div class="sy" id="fb1"></div>
+        <div class="sy" id="fb2"></div>
+        <div class="sy" id="fb3"></div>
+      </div>
+        <div class="boxfoot">
+      </div>
+      </div>
+    </li>
+    <li>
+      <div class="bar">
+        <div class="barbox2">
+          <ul class="clearfix">
+            <li class="pulll_left">2021年成品入库总量 </li>
+            <li class="pulll_left">2021年出货总量</li>
+          </ul>
+        </div>
+        <div class="barbox">
+          <ul class="clearfix">
+            <li class="pulll_left counter">3450</li>
+            <li class="pulll_left counter">330</li>
+          </ul>
+        </div>
+
+        <div style="height: 95px;">
+            <div class="con_div_text01 left">
+                <img src="images/info_1.png" class="text01_img"/>
+                <div class="left text01_div">
+                    <p>今日下线(pcs)</p>
+                    <p>1235</p>
+                </div>
+            </div>
+            <div class="con_div_text01 left">
+                <img src="images/info_11.png" class="text01_img"/>
+                <div class="left text01_div">
+                    <p>今日测试不良(次)</p>
+                    <p>1235</p>
+                </div>
+            </div>
+
+            <div class="con_div_text01 left">
+                <img src="images/info_10.png" class="text01_img"/>
+                <div class="left text01_div">
+                    <p>应到人数(人)</p>
+                    <p>235</p>
+                </div>
+            </div>
+
+            <div class="con_div_text01 left">
+                <img src="images/info_6.png" class="text01_img"/>
+                <div class="left text01_div">
+                    <p>请假人数(人)</p>
+                    <p>235</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="barbox">
+          <div class="map">
+            <div class="map1"><img src="picture/lbx.png"></div>
+            <div class="map2"><img src="picture/jt.png"></div>
+            <div class="map3"><img src="picture/map.png"></div>
+            <div class="map4" style="width: 100%;left: 0%; top: -2%;position:absolute;">
+
+              <div class="allnav" id="echart7"></div>
+              <div class="main_title">
+                  <img src="images/t_4.png" alt="">
+                  实时推送
+              </div>
+              <table style="top: 43%;position:absolute;" id="wangyong">
+                <thead class="add_relation">
+                  <tr>
+                      <th>事务类别</th>
+                      <th>事务备注</th>
+                      <th>事务描述</th>
+                      <th>日期时间</th>
+                  </tr>
+                </thead>
+                <tbody class="fuck">
+                  <tr>
+                      <td>缺料</td>
+                      <td>68575.6</td>
+                      <td>464.43</td>
+                      <td>2018/10/03 12:22:45</td>
+                  </tr>
+                  <tr>
+                      <td>过期</td>
+                      <td>37111.03</td>
+                      <td>278.5</td>
+                      <td>2017年</td>
+                  </tr>
+                  <tr>
+                      <td>设备异常</td>
+                      <td>26841.29</td>
+                      <td>163.72</td>
+                      <td>2016年</td>
+                  </tr>
+                  <tr>
+                      <td>车间生产</td>
+                      <td>CDU223A</td>
+                      <td>新增一组关联</td>
+                      <td>2015年</td>
+                  </tr>
+                  <tr>
+                      <td>1427.04</td>
+                      <td>10859.54</td>
+                      <td>12469.11</td>
+                      <td>2014年</td>
+                  </tr>
+                  <tr>
+                      <td>1427.04</td>
+                      <td>10859.54</td>
+                      <td>12469.11</td>
+                      <td>2014年</td>
+                  </tr>
+                  <tr>
+                      <td>1427.04</td>
+                      <td>10859.54</td>
+                      <td>12469.11</td>
+                      <td>2014年</td>
+                  </tr>
+                  <tr>
+                      <td>1427.04</td>
+                      <td>10859.54</td>
+                      <td>12469.11</td>
+                      <td>20146年</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="boxall" style="height:3.4rem">
+        <div class="alltitle">未完工生产订单趋势图放到左下三图</div>
+        <div class="allnav" id="echart4"></div>
+        <div class="boxfoot"></div>
+      </div>
+
+      <div class="boxall" style="height: 3.2rem">
+        <div class="alltitle">近7月出货图</div>
+        <div class="allnav" id="echart5"></div>
+        <div class="boxfoot"></div>
+      </div>
+      <div class="boxall" style="height: 3rem">
+        <div class="alltitle">近7月入库图</div>
+        <div class="allnav" id="echart6"></div>
+        <div class="boxfoot"></div>
+      </div>
+    </li>
+  </ul>
+</div>
+<div class="back"></div>
+
+
+<script type="text/javascript">
+
+$(function () {
+  // setInterval(function () { //每1秒刷新一次图表
+  //   add_relation([1]);
+  // }, 1000);
+
+  echarts_1({yield_rate:93.69,wd:23,sd:0.39,power:14.25}); // 温湿度及耗电量
+  seven_days([1500, 1200, 600, 200, 300, 300, 100]);
+  trend_chart({name:['2110087', '2110064', '2110085','21109016','21108016','21109016','21109016','21109016','21109016','21109016','2110087', '2110064', '2110085','21109016','21108016','21109016','21109016','21109016','21109016','21109016','21109016','21109016','21109016','21109016'],v1:[500,200,300,1000,500,500,200,300,1000,500,500,200,300,1000,500,500,200,300,1000,500,500,200,300,1000],v2:[120,150,220,120,150,220,120,150,220,120,150,220,120,150,220,120,150,220,120,150,220,220,345,100]}); //右一趋势图
+  echarts_31();
+  echarts_32();
+  echarts_33();
+  echarts_5();
+  echarts_6();
+  progress_bar({name:['CDU', 'HVB', 'EDU', 'VPU', 'UNK','FUK'],value:[80,40,60,99,80,90]});
+})
+
+</script>
+
+</body>
+</html>
