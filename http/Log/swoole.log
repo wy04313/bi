@@ -1,0 +1,8 @@
+[2021-06-01 04:32:28 $15343.0]	WARNING	check_worker_exit_status: worker#13[pid=15360] abnormal exit, status=255, signal=0
+[2021-06-01 04:46:07 $15580.0]	WARNING	check_worker_exit_status: worker#13[pid=15597] abnormal exit, status=255, signal=0
+[2021-06-01 04:47:41 $15650.0]	WARNING	check_worker_exit_status: worker#13[pid=15667] abnormal exit, status=255, signal=0
+[2021-06-01 04:48:20 $15678.0]	WARNING	check_worker_exit_status: worker#13[pid=15695] abnormal exit, status=255, signal=0
+[2021-06-01 04:48:50 $15736.0]	WARNING	check_worker_exit_status: worker#13[pid=15753] abnormal exit, status=255, signal=0
+[2021-06-01 04:50:15 $15813.0]	WARNING	check_worker_exit_status: worker#13[pid=15830] abnormal exit, status=255, signal=0
+[2021-06-01 05:04:42 $16123.0]	WARNING	check_worker_exit_status: worker#13[pid=16140] abnormal exit, status=255, signal=0
+[2021-06-01 05:05:50 $16186.0]	WARNING	check_worker_exit_status: worker#13[pid=16203] abnormal exit, status=255, signal=0
