@@ -18,12 +18,14 @@ class WebSocketEvents {
      */
     static function onOpen(\swoole_websocket_server $server, \swoole_http_request $request)
     {
-        $fd = $request->fd;
+        // $fd = $request->fd;
 
         // $getParm = $request->get; //所有get参数
-
-        $welcome = ['code' => 0,'msg' => '连接成功.','data' => ''];
-        $server->push($fd, json_encode($welcome, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        // $server->push($fd, json_encode([
+        //     'code' => 0,
+        //     'msg' => '连接成功.',
+        //     'data' => '',
+        //     'cate' => 'init_ok'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
         // $online = OnlineUser::getInstance();
 
@@ -53,13 +55,7 @@ class WebSocketEvents {
     static public function onClose(\swoole_server $server, int $fd, int $reactorId)
     {
         go(function ()use($fd){
-            $online = OnlineUser::getInstance();
-            $user = $online->get($fd);
-
-            if($user && $user['tag'] === 'MS') { // http请求来的,不在table中
-                $online->offline($fd);
-            }
-            $online->delete($fd);
+            $online = OnlineUser::getInstance()->delete($fd);
         });
     }
 

@@ -35,6 +35,7 @@ return [
         'charset'              => 'utf8mb4',//字符编码
         'strict_type'          => false, //开启严格模式，返回的字段将自动转为数字类型
         'fetch_mode'           => false,//开启fetch模式, 可与pdo一样使用fetch/fetchAll逐行或获取全部结果集(4.0版本以上)
+        'returnCollection'     => false, //返回集合
         'alias'                => '',//子查询别名
         'isSubQuery'           => false,//是否为子查询
         'max_reconnect_times ' => '3',//最大重连次数
@@ -51,6 +52,7 @@ return [
         'connect_timeout'      => '5',//连接超时时间
         'charset'              => 'utf8mb4',//字符编码
         'strict_type'          => false, //开启严格模式，返回的字段将自动转为数字类型
+        'returnCollection'     => true, //返回集合
         'fetch_mode'           => true,//开启fetch模式, 可与pdo一样使用fetch/fetchAll逐行或获取全部结果集(4.0版本以上)
         'alias'                => '',//子查询别名
         'isSubQuery'           => false,//是否为子查询
@@ -59,7 +61,7 @@ return [
 
     'REDIS' => [
         //数据库配置
-        'host'                 => '127.0.0.1',//数据库连接ip
+        'host'                 => '10.10.5.25',//数据库连接ip
         'port'                 => '6379',//端口
         'auth'                 => 'sb_fzw',//数据库密码
         'serialize'            => \EasySwoole\Redis\Config\RedisConfig::SERIALIZE_NONE,
@@ -73,7 +75,7 @@ return [
 
     'MES_QUEUE' => [
         //数据库配置
-        'host'                 => '127.0.0.1',//数据库连接ip
+        'host'                 => '10.10.5.25',//数据库连接ip
         'port'                 => '6379',//端口
         'auth'                 => 'sb_fzw',//数据库密码
         'db'                   => '15', // 0 缓存, 15 队列

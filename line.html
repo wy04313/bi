@@ -222,7 +222,8 @@ function init(elemid) {
 <!-- 正文开始 -->
 <div class="layui-fluid ew-console-wrapper">
     <div class="content-middle">
-        <span id="tag_title">浙江创区电控车间CDU产线实况(S01)</span>
+        <span id="tag_title">数据请求中...</span>
+        <span id="updated"></span>
         <span id="showTime" style="font-size:14px;float: right;"></span>
     </div>
     <script>
@@ -254,110 +255,35 @@ function init(elemid) {
                 </div>
             </div>
             <div class="layui-card">
-                <div class="layui-card-header">生产缺料情况统计</div>
+                <div class="layui-card-header">生产缺料统计 <span id="roll_list_updated" style="color:#FFF;float: right;"></span></div>
                 <div class="layui-card-body" style="height: 400px;overflow: hidden;">
                     <div class="tablebox">
-
                             <div class="tbl-header">
                                 <table border="0" cellspacing="0" cellpadding="0">
                                     <thead>
                                         <tr>
-                                            <th>头像</th>
-                                            <th>姓名</th>
-                                            <th>处分时间</th>
-                                            <th>处分原因</th>
-                                            <th>处分类型</th>
+                                            <th width="170">料号</th>
+                                            <th>需求用量</th>
+                                            <th>实际库存</th>
+                                            <th>缺料</th>
+                                            <th>数量级别</th>
                                         </tr>
                                     </thead>
                                     <tbody style="opacity:0;"></tbody>
                                 </table>
                             </div>
-
                             <div class="tbl-body">
                                 <table border="0" cellspacing="0" cellpadding="0">
-                                    <thead>
+                                    <thead class="add_relation">
                                         <tr>
-                                            <th>头像</th>
-                                            <th>姓名</th>
-                                            <th>处分时间</th>
-                                            <th>处分原因</th>
-                                            <th>处分类型</th>
+                                            <th>料号</th>
+                                            <th>需求用量</th>
+                                            <th>实际库存</th>
+                                            <th>缺料</th>
+                                            <th>数量级别</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><img src="./image/rx.png" alt=""></td>
-                                            <td>张飞1</td>
-                                            <td>2020.8.30</td>
-                                            <td>打架斗殴</td>
-                                            <td><p class="cf1">开除学籍</p></td>
-                                        </tr>
-                                        <tr>
-                                            <td><img src="./image/rx.png" alt=""></td>
-                                            <td>张飞2</td>
-                                            <td>2020.8.30</td>
-                                            <td>打架斗殴</td>
-                                            <td><p class="cf2">留校查看</p></td>
-                                        </tr>
-                                        <tr>
-                                            <td><img src="./image/rx.png" alt=""></td>
-                                            <td>张飞3</td>
-                                            <td>2020.8.30</td>
-                                            <td>打架斗殴</td>
-                                            <td><p class="cf3">开除学籍</p></td>
-                                        </tr>
-                                        <tr>
-                                            <td><img src="./image/rx.png" alt=""></td>
-                                            <td>张飞4</td>
-                                            <td>2020.8.30</td>
-                                            <td>打架斗殴</td>
-                                            <td><p class="cf1">开除学籍</p></td>
-                                        </tr>
-                                        <tr>
-                                            <td><img src="./image/rx.png" alt=""></td>
-                                            <td>张飞5</td>
-                                            <td>2020.8.30</td>
-                                            <td>打架斗殴</td>
-                                            <td><p class="cf2">留校查看</p></td>
-                                        </tr>
-                                        <tr>
-                                            <td><img src="./image/rx.png" alt=""></td>
-                                            <td>张飞6</td>
-                                            <td>2020.8.30</td>
-                                            <td>打架斗殴</td>
-                                            <td><p class="cf3">开除学籍</p></td>
-                                        </tr>
-
-
-
-                                        <tr>
-                                            <td><img src="./image/rx.png" alt=""></td>
-                                            <td>张飞7</td>
-                                            <td>2020.8.30</td>
-                                            <td>打架斗殴</td>
-                                            <td><p class="cf3">开除学籍</p></td>
-                                        </tr>
-                                        <tr>
-                                            <td><img src="./image/rx.png" alt=""></td>
-                                            <td>张飞8</td>
-                                            <td>2020.8.30</td>
-                                            <td>打架斗殴</td>
-                                            <td><p class="cf1">开除学籍</p></td>
-                                        </tr>
-                                        <tr>
-                                            <td><img src="./image/rx.png" alt=""></td>
-                                            <td>张飞9</td>
-                                            <td>2020.8.30</td>
-                                            <td>打架斗殴</td>
-                                            <td><p class="cf2">留校查看</p></td>
-                                        </tr>
-                                        <tr>
-                                            <td><img src="./image/rx.png" alt=""></td>
-                                            <td>张飞10</td>
-                                            <td>2020.8.30</td>
-                                            <td>打架斗殴</td>
-                                            <td><p class="cf3">开除学籍</p></td>
-                                        </tr>
+                                    <tbody id="roll">
                                     </tbody>
                                 </table>
                             </div>
@@ -380,48 +306,48 @@ function init(elemid) {
 <script type="text/html" id="orderInfo">
     <div class="layui-col-md2 layui-col-sm4 layui-col-xs6">
         <div class="console-link-block">
-            <div class="console-link-block-num">{{d.person}}</div>
-            <div class="console-link-block-text">上工人数</div>
+            <div class="console-link-block-num">{{d.b1.val}}</div>
+            <div class="console-link-block-text">{{d.b1.lab}}</div>
             <i class="console-link-block-icon layui-icon layui-icon-group"></i>
             <!-- <div class="console-link-block-band">待审批</div> -->
         </div>
     </div>
     <div class="layui-col-md2 layui-col-sm4 layui-col-xs6">
         <div class="console-link-block">
-            <div class="console-link-block-num">{{d.wd}}</div>
-            <div class="console-link-block-text">当前温度</div>
+            <div class="console-link-block-num">{{d.b2.val}}</div>
+            <div class="console-link-block-text">{{d.b2.lab}}</div>
             <i class="console-link-block-icon layui-icon layui-icon-light"></i>
             <!-- <div class="console-link-block-band">待审批</div> -->
         </div>
     </div>
     <div class="layui-col-md2 layui-col-sm4 layui-col-xs6">
         <div class="console-link-block">
-            <div class="console-link-block-num">{{d.sd}}</div>
-            <div class="console-link-block-text">今日测试警报</div>
+            <div class="console-link-block-num">{{d.b3.val}}</div>
+            <div class="console-link-block-text">{{d.b3.lab}}</div>
             <i class="console-link-block-icon layui-icon layui-icon-snowflake"></i>
             <div class="console-link-block-band">测试 NG</div>
         </div>
     </div>
     <div class="layui-col-md2 layui-col-sm4 layui-col-xs6">
         <div class="console-link-block">
-            <div class="console-link-block-num">{{d.over}}</div>
-            <div class="console-link-block-text">完工</div>
+            <div class="console-link-block-num">{{d.b4.val}}</div>
+            <div class="console-link-block-text">{{d.b4.lab}}</div>
             <i class="console-link-block-icon layui-icon layui-icon-face-smile"></i>
             <!-- <div class="console-link-block-band">去查看</div> -->
         </div>
     </div>
     <div class="layui-col-md2 layui-col-sm4 layui-col-xs6">
         <div class="console-link-block">
-            <div class="console-link-block-num">{{d.relation}}</div>
-            <div class="console-link-block-text">未完工订单</div>
+            <div class="console-link-block-num">{{d.b5.val}}</div>
+            <div class="console-link-block-text">{{d.b5.lab}}</div>
             <i class="console-link-block-icon layui-icon layui-icon-service"></i>
             <!-- <div class="console-link-block-band">去查看</div> -->
         </div>
     </div>
     <div class="layui-col-md2 layui-col-sm4 layui-col-xs6">
         <div class="console-link-block">
-            <div class="console-link-block-num">{{d.bad}}</div>
-            <div class="console-link-block-text">今日不良品</div>
+            <div class="console-link-block-num">{{d.b6.val}}</div>
+            <div class="console-link-block-text">{{d.b6.lab}}</div>
             <i class="console-link-block-icon layui-icon layui-icon-face-cry"></i>
             <!-- <div class="console-link-block-band">待审批</div> -->
         </div>
@@ -437,469 +363,12 @@ function init(elemid) {
 <script src="assets/libs/echarts/echartsTheme.js"></script>
 <script src='js/p5.js'></script>
 <script src="js/script.js"></script>
+<script src="js/line.js"></script>
 <!-- <script src="theme/shine.js"></script> -->
 
 
-<script type="text/javascript">
-var MyMarhq = '';
-clearInterval(MyMarhq);
-var item = $('.tbl-body tbody tr').length
-// console.log(item)
-
-
-if(item> 4){
-    $('.tbl-body tbody').html($('.tbl-body tbody').html()+$('.tbl-body tbody').html());
-    $('.tbl-body').css('top', '0');
-    var tblTop = 0;
-    var speedhq = 50; // 数值越大越慢
-    var outerHeight = $('.tbl-body tbody').find("tr").outerHeight();
-    function Marqueehq(){
-        if(tblTop <= -outerHeight*item){
-            tblTop = 0;
-        } else {
-            tblTop -= 1;
-        }
-        $('.tbl-body').css('top', tblTop+'px');
-    }
-
-    MyMarhq = setInterval(Marqueehq,speedhq);
-
-    // 鼠标移上去取消事件
-    $(".tbl-body tbody").hover(function (){
-        clearInterval(MyMarhq);
-    },function (){
-        clearInterval(MyMarhq);
-        MyMarhq = setInterval(Marqueehq,speedhq);
-    })
-
-}
-</script>
-
 
 <script>
-    layui.use(['layer','laytpl'], function () {
-        var $ = layui.jquery;
-        var layer = layui.layer;
-        var laytpl = layui.laytpl;
-        var data = {person: 33,wd: "23,251", sd: "256", over: "16", relation: "130", bad: "109"}
-
-        var orderInfoTpl = orderInfo.innerHTML  //获取模板，即上面所定义的 <script id="orderInfo">
-            , orderInfoDiv = document.getElementById('workshop');  //视图 即上面的 <div id="orderInfoDiv">
-            laytpl(orderInfoTpl).render(data, function (html) { //渲染视图
-            orderInfoDiv.innerHTML = html;
-        });
-
-
-
-
-    });
-
-$(function(){
-
-var ws = new WebSocket("ws://10.0.7.254:9900");
-var mIp = getIp('http://mes.drive-inno.com/mes/api/getIp');
-ws.onopen = function(event){
-　　//当WebSocket创建成功时，触发onopen事件
-    if(mIp) {
-        console.log("open");
-        toS('Index','hello',{ip:mIp});
-    } else {
-        $('#tag_title').html('无法获取IP');
-    }
-
-
-
-}
-ws.onmessage = function(e){
-    //当客户端收到服务端发来的消息时，触发onmessage事件，参数e.data包含server传递过来的数据
-    console.log('ok');
-    var data = JSON.parse(e.data);
-    if (data.url) {
-        // window.location.href = data.url;
-    }
-
-
-
-
-// 　　console.log(e.data);
-　　console.log(data);
-}
-ws.onclose = function(e){
-　　//当客户端收到服务端发送的关闭连接请求时，触发onclose事件
-　　console.log("close");
-}
-ws.onerror = function(e){
-　　//如果出现连接、处理、接收、发送数据失败的时候触发onerror事件
-　　console.log(error);
-}
-
-
-
-
-
-
-
-
-        function toS(c,a,d){
-            ws.send(JSON.stringify({"controller":c,"action":a,"params":d}));
-        }
-
-        draw_lb();
-
-        function draw_lb(){
-
-            var myChart = echarts.init(document.getElementById('lb'));
-            // var myChart = echarts.init(document.getElementById('lb'),'shine');
-            // 指定图表的配置项和数据
-            lb = {
-                // backgroundColor: '#192355',
-                title : {
-                    text: 'CDU233A(200台),VPU118C(400台)',
-                    top:10,
-                    left:8,
-                    textStyle:{
-                        fontSize: 18,
-                        color :'#FFF'
-                    }
-                },
-
-                tooltip : {
-                    formatter: "{a} <br/>{b} : {c}%"
-                },
-                series : [
-                    {
-                        name:'业务指标',
-                        type:'gauge',
-                        startAngle: 180,
-                        endAngle: 0,
-                        itemStyle:{
-                            // color:'#000066', //指针颜色
-                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                                offset: 0,
-                                color: '#590FB7'
-                            }, {
-                                offset: 1,
-                                color: '#FF0076'
-                            }])
-                        },
-                        center : ['50%', '90%'],    // 默认全局居中
-                        radius : 200,
-                        axisLine: {            // 坐标轴线
-                            lineStyle: {       // 属性lineStyle控制线条样式
-                                // 和值为2
-                                color: [[0.25, '#594EF6'],[0.5, '#B14FF4'],[0.75, '#507EF6'],[1, '#F84EF2']], //4
-                                // color: [[0.5, '#594EF6'],[0.8, '#507EF6'],[1, '#FF6600']],
-                                width: 180,
-                                shadowColor : '#C2F651', //默认透明
-                                shadowBlur: 10
-                            }
-                        },
-                        axisTick: {            // 坐标轴小标记
-                            splitNumber: 10,   // 每份split细分多少段
-                            length :6,        // 属性length控制线长
-                        },
-                        axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
-                            // formatter: function(v){
-                            //     switch (v+''){
-                            //         // 4
-                            //         // case '25': return '25P';
-                            //         // case '50': return '50P';
-                            //         // case '75': return '75P';
-                            //         // case '100': return 'Over';
-                            //         // default: return '';
-                            //         case '30': return '25P';
-                            //         case '85': return '75P';
-                            //         case '100': return 'Over';
-                            //         default: return '';
-
-                            //     }
-                            // },
-                            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                                color: '#fff',
-                                fontSize: 15,
-                                fontWeight: 'bolder'
-                            }
-                        },
-                        pointer: {
-                            width:45,
-                            length: '95%',
-                            color: 'rgba(255, 255, 255, 0.8)'
-                        },
-                        title : {
-                            show : true,
-                            offsetCenter: [0, '-60%'],       // x, y，单位px
-                            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                                color: '#4EB3F1',
-                                fontSize: 28
-                            }
-                        },
-                        detail : {
-                            show : true,
-                            backgroundColor: 'rgba(0,0,0,0)',
-                            borderWidth: 0,
-                            borderColor: '#4EB3F1',
-                            width: 100,
-                            height: 40,
-                            offsetCenter: [0, 0],       // x, y，单位px
-                            formatter:'{value}%',
-                            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                                color: '#FFF',
-                                fontSize : 30
-                            }
-                        },
-                        data:[{value: 35, name: '完成率'}]
-                    }
-                ]
-            };
-
-            // 使用刚指定的配置项和数据显示图表。
-            myChart.setOption(lb);
-            window.addEventListener("resize",function(){
-                myChart.resize();
-            });
-        }
-
-
-
-
-        draw_rb({title:'102SC2108024(CDU233A)',data_x:['P板','K板','Q板','绝缘耐压测试','下线测试'],data_y1:[300,300,300,300,300],data_y2:[300,95,0,118,2],data_y3:[11,44,16,0,80]});
-
-        function draw_rb(res){
-
-            var myChart = echarts.init(document.getElementById('rb'));
-            myChart.showLoading();
-            var rb = {
-                    title : {
-                        text: res.title,
-                        top:20,
-                        left:10,
-                        bottom:35,
-                        textStyle:{
-                            fontSize: 24,
-                            color :'#FFF'
-                        }
-                    },
-                    tooltip: {
-                        trigger: 'axis'
-                    },
-                    legend: {
-                        x: 'right',
-                        data: ['计划产量','已关联','完工数量'],
-                        textStyle: {
-                            color: '#9191c2',
-                            fontSize: 16,
-                            padding: [0, 40, 0, 5],
-                        },
-                        padding: [35, 200, 0, 0],
-                    },
-                    toolbox: {
-                        show: false,
-                        feature: {
-                            mark: {show: false},
-                            dataView: {show: true, readOnly: false},
-                            magicType: {show: true, type: ['line', 'bar']},
-                            restore: {show: true},
-                            saveAsImage: {show: true}
-                        }
-                    },
-                    grid: {
-                        y: 120, y2: 50, x: 80, x2: 80,
-                        tooltip: {
-                            show: true
-                        }
-                    },
-                    calculable: true,
-                    yAxis: [
-                        {
-                            name: '产量（PCS）',
-                            nameTextStyle: {
-                                color: '#9191c2'
-                            },
-
-                              max: function(value){
-                                return value.max + 0.1*value.max
-                              },
-
-                            splitLine: {
-                                show: true,//去除网格线
-                                lineStyle: {
-                                    color: '#383756'
-                                },
-                            },
-                            type: 'value',
-                            axisLabel: {
-                                show: true,
-                                interval: 0,
-                                textStyle: {
-                                    color: '#9191c2'
-                                }
-                            },
-                            axisTick: {
-                                show: true
-                            },
-                            axisLine: {show: false}
-                        },
-
-                        {
-                            name: '工艺流程',
-                            nameTextStyle: {
-                                color: '#9191c2'
-                            },
-                            splitLine: {show: false},//去除网格线
-                            type: 'value',
-                            axisLabel: {
-                                show: true,
-                                interval: 0,
-                                textStyle: {
-                                    color: '#9191c2'
-                                }
-                            },
-                            axisTick: {
-                                show: false
-                            },
-                            axisLine: {show: false}
-                        },
-                    ],
-                    xAxis: {
-                        axisLabel: {
-                            interval: 0,
-                            textStyle: {
-                                fontSize: 20,
-                                color: '#FFF'
-                            },
-                            // margin-bottom: 20, //刻度标签与轴线之间的距离
-                            show: true
-                        },
-                        axisTick: {
-                            show: false
-                        },
-                        axisLine: {
-                            lineStyle: {
-                                color: '#383756'
-                            },
-                            show: false
-                        },
-                        data : res.data_x,
-                    },
-                    series: [
-                        {
-                            name: '计划产量',
-                            type: 'bar',
-                            barWidth: 42,
-                            smooth: true,
-                            itemStyle: {
-                                normal: {
-                                    label: {
-                                        show: true, //开启显示
-                                        position: 'top', //在上方显示
-                                        textStyle: { //数值样式
-                                            fontSize: 24,
-                                            color: '#F00EF3'
-                                        }
-                                    },
-                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                                        offset: 0,
-                                        color: '#FF6B00'
-                                    }, {
-                                        offset: 1,
-                                        color: '#E233FF'
-                                    }]),
-                                }
-                            },
-                            symbol: 'emptydiamond',
-                            data:res.data_y1,
-                            barGap: '100%'
-                        },
-                        {
-                            name: '已关联',
-                            type: 'bar',
-                            barWidth: 42,
-                            smooth: true,
-                            itemStyle: {
-                                normal: {
-                                    label: {
-                                        show: true, //开启显示
-                                        position: 'top', //在上方显示
-                                        textStyle: { //数值样式
-                                            fontSize: 24,
-                                            color: '#7AA4EF'
-                                        }
-                                    },
-                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                                        offset: 0,
-                                        color: '#DF98FA'
-                                    }, {
-                                        offset: 1,
-                                        color: '#9055FF'
-                                    }]),
-                                }
-                            },
-                            symbol: 'emptydiamond',
-                            data:res.data_y2,
-                            barGap: '100%'
-                        },
-                        {
-                            name: '完工数量',
-                            type: 'bar',
-                            barWidth: 42,
-                            itemStyle: {
-                                normal: {
-                                    label: {
-                                        show: true, //开启显示
-                                        position: 'top', //在上方显示
-                                        textStyle: { //数值样式
-                                            fontSize: 24,
-                                            color: '#F7BA88'
-                                        }
-                                    },
-                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                                        offset: 0,
-                                        color: '#FF6600'
-                                    }, {
-                                        offset: 1,
-                                        color: '#F4F110'
-                                    }]),
-                                }
-                            },
-                            symbol: 'emptydiamond',
-                            data:res.data_y3,
-                            barGap: '100%'
-                        }
-                    ]
-                }
-
-
-
-
-            // 使用刚指定的配置项和数据显示图表。
-            myChart.setOption(rb);
-            myChart.hideLoading(); //隐藏加载动画
-            window.addEventListener("resize",function(){
-                myChart.resize();
-            });
-        }
-    function getUrlParam(name){
-        var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
-        var r = window.location.search.substr(1).match(reg);  //匹配目标参数
-        if (r!=null) return unescape(r[2]); return null; //返回参数值
-    }
-
-    function getIp(url){
-        var mIp = '';    // 先定义个值，方便下面赋值
-        $.ajax({
-             async:false,    // 这个需要写上
-             url:url,
-             type:'post',
-             dataType:'json',
-             data:{},
-             success:function (res) {
-                 mIp = res.data;   // 赋值给刚才定义的值
-             }
-        });
-        return mIp
-    }
-
-});
 
 </script>
 </body>

@@ -4,7 +4,7 @@ namespace App\Task;
 
 use EasySwoole\Component\Process\AbstractProcess;
 use EasySwoole\Queue\Job;
-use App\Task\OnlineUser;
+use App\Task\Push;
 use EasySwoole\EasySwoole\ServerManager;
 
 class QueueProcess extends AbstractProcess
@@ -15,107 +15,32 @@ class QueueProcess extends AbstractProcess
         go(function (){
             MyQueue::getInstance()->consumer()->listen(function (Job $job){
                 $que = $job->getJobData();
-// print_r($que);
                 $cate = empty($que['cate']) ? '' : $que['cate'];
+        // print_r($que);
                 switch ($cate) {
-                    case 'relation_add':
-                        $this->addRelation($que);
+                    case 'station_log':# 将mongodb中的 数据,重复的删除
+                        $this->stationLog($que['data']);
                         break;
-                    case 'inc':
-                        # relation_over(一个产品的关联工位都完成)
-                        # add_over 完工
-                        $this->inc($que);
+                    // case 'today_task':# 管理推送
+                    //     $this->todayTask($que['cate'],$que['data']);
+                    //     break;
+                    case 'line':# 推送line数据至页面
+                        Push::getInstance()->pushData('line','line');
                         break;
-                    case 'trycatch':
-                        # 程序异常
-                        break;
-                    case 'online':
-                    case 'offline':
-                        # 上线
-                        $this->onOffPush($que);
-                        break;
-                    case 'sub_fix':
-                        # 设备报修
-                        break;
-                    case 'full':
-                        # 全屏推送
-                        $this->full($que);
-                        break;
-                    case 'admin':
-                        # 管理推送
-                        $this->adminPush($que);
-                        break;
+
                 }
             });
         });
     }
 
-    // 客户端上下线推送
-    private function onOffPush($data){
-        $users = OnlineUser::getInstance()->table();
-        $server = ServerManager::getInstance()->getSwooleServer();
-        foreach ($users as $v) {
-            if($v['tag'] === 'MD') {
-                $server->push($v['fd'], $this->getEnArray(['code' => 10111, 'data' => $data]));
-                break;
-            }
-        }
+    // 临时用,废弃stationLag表后可删除
+    protected function stationLog($data){
+
     }
 
-    private function adminPush($data){
-        $users = OnlineUser::getInstance()->table();
-        $server = ServerManager::getInstance()->getSwooleServer();
-        if($data['rec_tags'] === 'ALL') {
-            foreach ($users as $v) {
-                if($v['tag'] === 'MS') {
-                    $server->push($v['fd'], $this->getEnArray(['code' => 10112, 'data' => $data]));
-                }
-            }
-        } else {
-            $rec = explode(',', $data['rec_tags']);
-            foreach ($users as $v) {
-                if(in_array($v['tags'], $rec)) {
-                    $server->push($v['fd'], $this->getEnArray(['code' => 10112, 'data' => $data]));
-                }
-            }
-        }
-    }
-
-    private function inc($data){
-        $users = OnlineUser::getInstance()->table();
-        $server = ServerManager::getInstance()->getSwooleServer();
-        foreach ($users as $v) {
-            if($v['task_id'] === $data['task_id']) {
-                $server->push($v['fd'], $this->getEnArray(['code' => 10111, 'data' => $data]));
-            }
-        }
-    }
-
-    private function getEnArray($data){
-        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    protected function whiteToJson($code = 0, $msg = '操作成功!', $data = [],$case = ''){
+        return json_encode(compact('code','msg','data','case'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
 
-    // 无法生效,暂时放弃
-    private function full($data){
-        $data['tags'] = 'MD004';
-        $users = OnlineUser::getInstance()->table();
-        $server = ServerManager::getInstance()->getSwooleServer();
-        foreach ($users as $v) {
-            if($v['tags'] === $data['tags']) {
-                $server->push($v['fd'], $this->getEnArray(['code' => 10110, 'data' => $data]));
-                break;
-            }
-        }
-    }
-
-    private function addRelation($data){
-        $users = OnlineUser::getInstance()->table();
-        $server = ServerManager::getInstance()->getSwooleServer();
-        foreach ($users as $v) {
-            if($v['task_id'] === $data['task_id'] || $v['tag'] === 'MD') {
-                $server->push($v['fd'], $this->getEnArray(['code' => 10109, 'data' => $data]));
-            }
-        }
-    }
 }

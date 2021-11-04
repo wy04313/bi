@@ -23,7 +23,6 @@ use EasySwoole\EasySwoole\Config;
 use EasySwoole\EasySwoole\Crontab\Crontab;
 
 use App\Task\OnlineUser;
-
 use EasySwoole\EasySwoole\AbstractInterface\Event;
 use EasySwoole\EasySwoole\Swoole\EventRegister;
 
@@ -67,11 +66,6 @@ class EasySwooleEvent implements Event
 
 
 
-
-
-
-
-
         // 收到用户消息时处理 websocket控制器 创建一个 Dispatcher 配置
         $conf = new \EasySwoole\Socket\Config();
         $conf->setType(\EasySwoole\Socket\Config::WEB_SOCKET);// 设置 Dispatcher 为 WebSocket 模式
@@ -86,11 +80,8 @@ class EasySwooleEvent implements Event
         $register->add(EventRegister::onOpen, [WebSocketEvents::class, 'onOpen']);
         $register->add(EventRegister::onClose, [WebSocketEvents::class, 'onClose']);
 
-        // OnlineUser::getInstance(); //建表
-        // Crontab::getInstance()->addTask(\App\Task\PollingFd::class);   // 定时轮询fd
-        // Crontab::getInstance()->addTask(\App\Task\PullProduct::class); // 日数据
-        // Crontab::getInstance()->addTask(\App\Task\PowerBI::class); // PowerBI
-        // Crontab::getInstance()->addTask(\App\Task\TestData::class); // 测试数据整理
+        OnlineUser::getInstance(); //建表
+        Crontab::getInstance()->addTask(\App\Task\InitTask::class);
 
         // 队列
         $redisConfig = new \EasySwoole\Redis\Config\RedisConfig(Config::getInstance()->getConf('MES_QUEUE'));
@@ -105,14 +96,18 @@ class EasySwooleEvent implements Event
         ]);
         \EasySwoole\Component\Process\Manager::getInstance()->addProcess(new QueueProcess($processConfig));
 
-
         $register->add(EventRegister::onWorkerStart, function (\swoole_server $server, $workerId) {
             if ($workerId == 0) {
-                \EasySwoole\Component\Timer::getInstance()->loop(1 * 1000, function () {
+                \EasySwoole\Component\Timer::getInstance()->loop(300 * 1000, function () {
                     $syncTask = \EasySwoole\EasySwoole\Task\TaskManager::getInstance();
-                    $syncTask->sync(new \App\Task\ClearData());
-                    // $syncTask->sync(new SyncBarcode0());
-                    // $syncTask->async(new SyncBase());
+                    $syncTask->async(new \App\Task\Push()); // 生产缺料
+                    OnlineUser::getInstance()->heartbeatCheck(); //检查心跳
+                });
+
+                // 在生产使用再打开
+                \EasySwoole\Component\Timer::getInstance()->loop(60 * 1000, function () {
+                    $syncTask = \EasySwoole\EasySwoole\Task\TaskManager::getInstance();
+                    $syncTask->async(new \App\Task\MysqlToMongoDB()); // vb到mysql的数据导入到mongodb
                 });
             }
         });

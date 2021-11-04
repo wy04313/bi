@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+  <meta name="format-detection" content="telephone=no">
+  <title>websocket demo</title>
+</head>
+<body>
+<button class="d-btn-send">发送消息</button>
+<button class="d-btn-cancel">取消连接</button>
+<button class="d-btn-reset">重启websocket</button>
+
+<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<!-- <script src="js/websocket.js" type="text/javascript"></script> -->
+<script>
+    var wsServer = 'ws://10.0.7.254:9900';
+    var timeConnect = 0;
+    webSocketInit(wsServer);
+    function webSocketInit(service){
+        var ws = new WebSocket(service);
+        ws.onopen = function () {
+            console.log("已连接TCP服务器");
+        };
+        ws.onmessage = function (msg) {
+            console.log(msg);
+        };
+        ws.onclose = function () {
+        console.log('服务器已经断开');
+            reconnect(service);
+        };
+        ws.onerror = function (err) {
+        //console.log("服务器报错：");
+            reconnect(service);
+        };
+    }
+    // 重连
+    function reconnect(service) {
+        setTimeout(function(){
+            webSocketInit(service);
+            localStorage.removeItem("lockReconnect");
+        },2000);
+    }
+
+    // 心跳 * 回应
+    // setInterval(function(){
+    //     websocket.send('');
+    // }, 1000*100);
+</script>
+</body>
+</html>
