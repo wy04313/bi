@@ -38,11 +38,7 @@
      /*********************初始化开始**********************/
     function initEventHandle() {
         ws.onopen = function() {
-            if(mIp) {
-                ws.send(JSON.stringify({controller:'Index',action:'getData',params:{page_name:pageName,created:created}}));
-            } else {
-                $('#tag_title').html('无法获取IP');
-            }
+            ws.send(JSON.stringify({controller:'Index',action:'getData',params:{page_name:pageName,created:created}}));
             heartCheck.reset().start();//心跳检测重置
         }
         // 收到服务器消息后响应
