@@ -1,5 +1,5 @@
 ﻿$(function() {
-    var mIp = getIp('http://mes.drive-inno.com/mes/api/getIp');
+    var mIp = getIp('getIp.php');
     var cost_type = getQueryVariable('cost_type');
     var lockReconnect = false;//避免重复连接
     var ws = null; //WebSocket的引用
