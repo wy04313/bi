@@ -1,9 +1,21 @@
 ﻿$(function() {
-    var mIp = getIp('getIp.php');
     var cost_type = getQueryVariable('cost_type');
     var lockReconnect = false;//避免重复连接
     var ws = null; //WebSocket的引用
     var wsUrl = "ws://10.10.5.25:9900"; //这个要与后端提供的相同
+    var created = getCookie('created');
+    if(created === null) {
+        var created = (new Date()).valueOf();
+        setCookie('created', created);
+    }
+
+    function pageName(){
+        var a = location.href;
+        var b = a.split("/");
+        var c = b.slice(b.length-1, b.length).toString(String).split(".");
+        return c.slice(0, 1)[0];
+    }
+
     function createWebSocket(){
         try {
             ws = new WebSocket(wsUrl);
@@ -27,10 +39,7 @@
     function initEventHandle() {
         ws.onopen = function() {
             if(mIp) {
-                ws.send(JSON.stringify({controller:'Index',action:'getData',params:{ip:mIp}}));
-                // ws.send(JSON.stringify({controller:'Line',action:'getBlockData',params:{cost_type:cost_type}}));
-                // ws.send(JSON.stringify({controller:'Line',action:'todayTask',params:{}}));
-                // ws.send(JSON.stringify({controller:'Line',action:'nowLine',params:{}}));
+                ws.send(JSON.stringify({controller:'Index',action:'getData',params:{page_name:pageName,created:created}}));
             } else {
                 $('#tag_title').html('无法获取IP');
             }
@@ -82,20 +91,20 @@ console.log(res);
         ws.close();
     }
     createWebSocket(wsUrl);/**启动连接**/
+    //写cookies
+    function setCookie(name, value) {
+        var Days = 99999;
+        var exp = new Date();
+        exp.setTime(exp.getTime() + Days * 24 * 60 * 60 * 1000);
+        document.cookie = name + "=" + escape(value) + ";expires=" + exp.toGMTString();
+    }
 
-    function getIp(url){
-        var mIp = '';    // 先定义个值，方便下面赋值
-        $.ajax({
-             async:false,    // 这个需要写上
-             url:url,
-             type:'post',
-             dataType:'json',
-             data:{},
-             success:function (res) {
-                 mIp = res.data;   // 赋值给刚才定义的值
-             }
-        });
-        return mIp
+    //读取cookies
+    function getCookie(name) {
+        var arr, reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
+
+        if (arr = document.cookie.match(reg)) return unescape(arr[2]);
+        else return null;
     }
 
     function draw_block_data(data){

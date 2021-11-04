@@ -20,19 +20,17 @@ class OnlineUser
     {
         TableManager::getInstance()->add('OnlineUsers', [
             'fd' => ['type' => Table::TYPE_INT, 'size' => 15],
-            'ip' => ['type' => Table::TYPE_STRING, 'size' => 20],
-            'url' => ['type' => Table::TYPE_STRING, 'size' => 100],
+            'created' => ['type' => Table::TYPE_INT, 'size' => 15],
             'last_heartbeat' => ['type' => Table::TYPE_INT, 'size' => 11],
         ]);
         $this->table = TableManager::getInstance()->get('OnlineUsers');
     }
 
-    public function set($fd, $ip, $url)
+    public function set($fd, $created)
     {
         return $this->table->set((string)$fd, [
             'fd' => $fd,
-            'ip' => $ip,
-            'url' => $url,
+            'created' => $created,
             'last_heartbeat' => time()
         ]);
     }
@@ -49,8 +47,7 @@ class OnlineUser
         if ($info) {
             $this->table->set((string)$info['fd'], [
                 'fd' => $info['fd'],
-                'ip' => $info['ip'],
-                'url' => $info['url'],
+                'created' => $info['created'],
                 'last_heartbeat' => time()
             ]);
         }

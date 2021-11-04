@@ -23,33 +23,28 @@ class Index extends Base
     // 打开页面后,页面带着ip来访,这里做验证
     public function hello()
     {
-        $title = '';$url = '';
         $params = $this->caller()->getArgs();
-        if($res = $this->getIpCof($params)) {
-            $title = $res['title'];
-            $url = $res['url'];
-        }
-        $case = $res ? 'jump' : 'Do_nothing';
-        $this->response()->setMessage($this->whiteToJson(0,'OK',compact('title','url'),  $case));
+        $res = $this->getPage($params['created']);
+        $res['fd'] = $this->caller()->getClient()->getFd();
+        $case = $res['url'] ? 'jump' : 'Do_nothing';
+        $this->response()->setMessage($this->whiteToJson(0,'OK',$res,  $case));
 
     }
 
-    private function getIpCof($params){
-        $res = null;
-        $fIp = trim($params['ip']);
-        $ips = WDataPagesModel::create()->where('ip', $fIp)->get();
-        if($ips) {
-            $ips = $ips->toArray(); //傻逼框架,没有数据时是null,有数据 需要转成数组
-
-            $fd = $this->caller()->getClient()->getFd();
-            OnlineUser::getInstance()->set($fd, $fIp, $ips['url']);
-
+    private function getPage($created){
+        $res = [
+            'title' => '',
+            'url' => '',
+        ];
+        $page = WDataPagesModel::create()->where('created', (int)$created)->get();
+        if($page) {
+            $page = $page->toArray(); //傻逼框架,没有数据时是null,有数据 需要转成数组
             $res = [
-                'title' => $ips['title'],
-                'url' => $ips['url']
+                'title' => $page['title'],
+                'url' => $page['url']
             ];
         } else {
-            WDataPagesModel::create()->data(['ip' => $fIp], false)->save();
+            WDataPagesModel::create()->data(['created' => $created], false)->save();
         }
         return $res;
     }
@@ -57,22 +52,18 @@ class Index extends Base
     // 由导航进入,这里一定是配置过IP页面的,或是由推送跳转的
     public function getData(){
         $params = $this->caller()->getArgs();
-        $fIp = trim($params['ip']);
-        $page = WDataPagesModel::create()->field('title,url')->where('ip', $fIp)->get();
-        if($page === null) {
-            WDataPagesModel::create()->data(['ip' => $fIp], false)->save();
-            $title = '未配置的页面,请联系IT.';$url = '';
-            $this->response()->setMessage($this->whiteToJson(0,'OK',compact('title','url'), 'Do_nothing'));
-        } else {
-            $page = $page->toArray();
-            // 只有配置过的才写入table
-            $fd = $this->caller()->getClient()->getFd();
-            OnlineUser::getInstance()->set($fd, $fIp, $page['url']);
+        $created = $params['created'];
+        $page_name = $params['page_name'];
+        $res = $this->getPage($created);
 
+        $fd = $this->caller()->getClient()->getFd();
+        OnlineUser::getInstance()->set($fd, (int)$created);
+
+        if($page_name === 'line3305') {
             $data = Push::getInstance()->getMysqlData('line');
-            $data['title'] = $page['title'];
-            $this->response()->setMessage($this->whiteToJson(0,'OK',$data, 'ok'));
+            $data['title'] = $res['title'];
         }
+        $this->response()->setMessage($this->whiteToJson(0,'OK',$data, 'ok'));
 
     }
 
