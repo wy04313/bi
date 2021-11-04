@@ -3,7 +3,7 @@
     var cost_type = getQueryVariable('cost_type');
     var lockReconnect = false;//避免重复连接
     var ws = null; //WebSocket的引用
-    var wsUrl = "ws://10.0.7.254:9900"; //这个要与后端提供的相同
+    var wsUrl = "ws://10.10.5.25:9900"; //这个要与后端提供的相同
     function createWebSocket(){
         try {
             ws = new WebSocket(wsUrl);
@@ -41,6 +41,7 @@
             heartCheck.reset().start();//如果获取到消息，心跳检测重置 拿到任何消息都说明当前连接是正常的
             if(e.data !== 'PONG') {
                 var res = eval('(' + e.data + ')');
+console.log(res);
                 doCase(res);
             }
         }

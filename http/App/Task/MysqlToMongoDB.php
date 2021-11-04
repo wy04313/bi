@@ -73,8 +73,6 @@ class MysqlToMongoDB implements TaskInterface
                     $bulk2->insert($stationLog[$k]);
                 }
                 $manager = $driver->getDb();
-
-
                 $writeConcern1 = new \MongoDB\Driver\WriteConcern(\MongoDB\Driver\WriteConcern::MAJORITY, 100);
                 $writeConcern2 = new \MongoDB\Driver\WriteConcern(\MongoDB\Driver\WriteConcern::MAJORITY, 100);
                 $manager->executeBulkWrite('mes.testLog', $bulk1, $writeConcern1);

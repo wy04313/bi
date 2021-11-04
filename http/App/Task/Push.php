@@ -145,7 +145,7 @@ class Push implements TaskInterface
         switch ($page) {
             case 'line':
                 foreach ($users as $v) {
-                    if(preg_match('/^.*?line\\.html.*?$/', $v['url'])) {
+                    if(preg_match('/^.*?line\d{2,4}\\.html.*?$/', $v['url'])) {
                         $server->push($v['fd'], $this->envJson($data));
                         break;
                     }

@@ -27,11 +27,8 @@ class PushData extends Base
     public function push(){
         $request = $this->request();
         $data = $request->getRequestParam();
-        $data = [
-            'page' => 'line', //推送的页面,目前有line total
-            'field' => 'line', //推送的字段 总成line
-        ];
 
+        // 必须传 field 和 page
         go(function() use($data){
             Push::getInstance()->pushData($data['field'],$data['page']);
         });
