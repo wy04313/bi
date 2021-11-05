@@ -52,6 +52,7 @@ class Index extends Base
     // 由导航进入,这里一定是配置过IP页面的,或是由推送跳转的
     public function getData(){
         $params = $this->caller()->getArgs();
+
         $created = $params['created'];
         $page_name = $params['page_name'];
         $res = $this->getPage($created);

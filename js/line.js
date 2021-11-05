@@ -2,7 +2,8 @@
     var cost_type = getQueryVariable('cost_type');
     var lockReconnect = false;//避免重复连接
     var ws = null; //WebSocket的引用
-    var wsUrl = "ws://10.10.5.25:9900"; //这个要与后端提供的相同
+    // var wsUrl = "ws://10.10.5.25:9900"; //这个要与后端提供的相同
+    var wsUrl = "ws://10.0.7.254:9900"; //这个要与后端提供的相同
     var created = getCookie('created');
     if(created === null) {
         var created = (new Date()).valueOf();
@@ -38,7 +39,7 @@
      /*********************初始化开始**********************/
     function initEventHandle() {
         ws.onopen = function() {
-            ws.send(JSON.stringify({controller:'Index',action:'getData',params:{page_name:pageName,created:created}}));
+            ws.send(JSON.stringify({controller:'Index',action:'getData',params:{page_name:pageName(),created:created}}));
             heartCheck.reset().start();//心跳检测重置
         }
         // 收到服务器消息后响应

@@ -69,10 +69,8 @@ class Push implements TaskInterface
 
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         foreach ($users as $v) {
-            if(preg_match('/^.*?line\\.html.*?$/', $v['url'])) {
-                $server->push($v['fd'], $pushData);
-                break;
-            }
+            $server->push($v['fd'], $pushData);
+            break;
         }
     }
 

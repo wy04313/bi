@@ -98,17 +98,20 @@ class EasySwooleEvent implements Event
 
         $register->add(EventRegister::onWorkerStart, function (\swoole_server $server, $workerId) {
             if ($workerId == 0) {
-                // \EasySwoole\Component\Timer::getInstance()->loop(300 * 1000, function () {
-                //     $syncTask = \EasySwoole\EasySwoole\Task\TaskManager::getInstance();
-                //     $syncTask->async(new \App\Task\Push()); // 生产缺料
-                //     OnlineUser::getInstance()->heartbeatCheck(); //检查心跳
-                // });
+                \EasySwoole\Component\Timer::getInstance()->loop(300 * 1000, function () {
+                    $syncTask = \EasySwoole\EasySwoole\Task\TaskManager::getInstance();
+                    $syncTask->async(new \App\Task\Push()); // 生产缺料
+                    OnlineUser::getInstance()->heartbeatCheck(); //检查心跳
+
+
+
+                });
 
                 // 在生产使用再打开
-                \EasySwoole\Component\Timer::getInstance()->loop(60 * 1000, function () {
-                    $syncTask = \EasySwoole\EasySwoole\Task\TaskManager::getInstance();
-                    $syncTask->async(new \App\Task\MysqlToMongoDB()); // vb到mysql的数据导入到mongodb
-                });
+                // \EasySwoole\Component\Timer::getInstance()->loop(60 * 1000, function () {
+                //     $syncTask = \EasySwoole\EasySwoole\Task\TaskManager::getInstance();
+                //     $syncTask->async(new \App\Task\MysqlToMongoDB()); // vb到mysql的数据导入到mongodb
+                // });
             }
         });
     }
