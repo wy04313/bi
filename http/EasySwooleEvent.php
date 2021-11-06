@@ -100,17 +100,16 @@ class EasySwooleEvent implements Event
             if ($workerId == 0) {
                 \EasySwoole\Component\Timer::getInstance()->loop(300 * 1000, function () {
                     $syncTask = \EasySwoole\EasySwoole\Task\TaskManager::getInstance();
-                    $syncTask->async(new \App\Task\Push()); // 生产缺料
+                    $syncTask->async(new \App\Task\U8()); // 生产缺料
                     OnlineUser::getInstance()->heartbeatCheck(); //检查心跳
-
-
-
                 });
 
-                // 在生产使用再打开
                 // \EasySwoole\Component\Timer::getInstance()->loop(60 * 1000, function () {
-                //     $syncTask = \EasySwoole\EasySwoole\Task\TaskManager::getInstance();
-                //     $syncTask->async(new \App\Task\MysqlToMongoDB()); // vb到mysql的数据导入到mongodb
+                //     // 在生产使用再打开
+                //     go(function (){
+                //         $syncTask = \EasySwoole\EasySwoole\Task\TaskManager::getInstance();
+                //         $syncTask->sync(new \App\Task\MysqlToMongoDB()); // vb到mysql的数据导入到mongodb
+                //     });
                 // });
             }
         });

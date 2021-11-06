@@ -13,7 +13,7 @@ class Base extends Controller
         return is_null($value) ? $default : $value;
     }
 
-    protected function whiteToJson($code = 0, $msg = '操作成功!', $data = [],$case = ''){
+    protected function writeToJson($code = 0, $msg = '操作成功!', $data = [],$case = ''){
         return json_encode(compact('code','msg','data','case'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 

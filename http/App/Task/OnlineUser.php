@@ -21,16 +21,18 @@ class OnlineUser
         TableManager::getInstance()->add('OnlineUsers', [
             'fd' => ['type' => Table::TYPE_INT, 'size' => 15],
             'created' => ['type' => Table::TYPE_INT, 'size' => 15],
+            'page_name' => ['type' => Table::TYPE_STRING, 'size' => 20],
             'last_heartbeat' => ['type' => Table::TYPE_INT, 'size' => 11],
         ]);
         $this->table = TableManager::getInstance()->get('OnlineUsers');
     }
 
-    public function set($fd, $created)
+    public function set($fd, $created, $page_name)
     {
         return $this->table->set((string)$fd, [
             'fd' => $fd,
             'created' => $created,
+            'page_name' => $page_name,
             'last_heartbeat' => time()
         ]);
     }
@@ -48,6 +50,7 @@ class OnlineUser
             $this->table->set((string)$info['fd'], [
                 'fd' => $info['fd'],
                 'created' => $info['created'],
+                'page_name' => $info['page_name'],
                 'last_heartbeat' => time()
             ]);
         }

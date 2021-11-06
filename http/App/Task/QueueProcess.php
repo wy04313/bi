@@ -4,8 +4,10 @@ namespace App\Task;
 
 use EasySwoole\Component\Process\AbstractProcess;
 use EasySwoole\Queue\Job;
-use App\Task\Push;
+
 use EasySwoole\EasySwoole\ServerManager;
+use App\Task\OnlineUser;
+use App\Model\WDataModel;
 
 class QueueProcess extends AbstractProcess
 {
@@ -16,16 +18,29 @@ class QueueProcess extends AbstractProcess
             MyQueue::getInstance()->consumer()->listen(function (Job $job){
                 $que = $job->getJobData();
                 $cate = empty($que['cate']) ? '' : $que['cate'];
-        // print_r($que);
+                $users = OnlineUser::getInstance()->table();
+                $server = ServerManager::getInstance()->getSwooleServer();
+
                 switch ($cate) {
-                    case 'station_log':# 将mongodb中的 数据,重复的删除
-                        $this->stationLog($que['data']);
+                    case 'lessMaterial':# 缺料全页面推送
+                    // echo $que['data']['roll']['roll_list_updated'].PHP_EOL;
+                        foreach ($users as $v) {
+                            $server->push($v['fd'], $this->whiteToJson($que['data'], 'ok'));
+                        }
                         break;
-                    // case 'today_task':# 管理推送
-                    //     $this->todayTask($que['cate'],$que['data']);
-                    //     break;
-                    case 'line':# 推送line数据至页面
-                        Push::getInstance()->pushData('line','line');
+                    case 'line3302':# line数据至页面
+                    case 'line3305':
+                    case 'line3306':
+                    case 'line3307':
+                        foreach ($users as $v) {
+                            if($v['page_name'] === $cate)
+                                $server->push($v['fd'], $this->whiteToJson($this->getLinePageData($cate), 'ok'));
+                        }
+                        break;
+                    case 'jump':# 跳转
+                        foreach ($users as $v) {
+                            $server->push((INT)$que['data']['fd'], $this->whiteToJson(['url' => $que['data']['url']], 'jump'));
+                        }
                         break;
 
                 }
@@ -33,13 +48,9 @@ class QueueProcess extends AbstractProcess
         });
     }
 
-    // 临时用,废弃stationLag表后可删除
-    protected function stationLog($data){
 
-    }
-
-    protected function whiteToJson($code = 0, $msg = '操作成功!', $data = [],$case = ''){
-        return json_encode(compact('code','msg','data','case'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    private function whiteToJson($data,$case = 'ok'){
+        return json_encode(compact('case','data'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
 

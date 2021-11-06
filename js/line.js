@@ -45,9 +45,10 @@
         // 收到服务器消息后响应
         ws.onmessage = function(e) {
             heartCheck.reset().start();//如果获取到消息，心跳检测重置 拿到任何消息都说明当前连接是正常的
+// console.log(e.data);
             if(e.data !== 'PONG') {
-                var res = eval('(' + e.data + ')');
-console.log(res);
+                // var res = eval('(' + e.data + ')');
+                var res = JSON.parse(e.data);
                 doCase(res);
             }
         }
@@ -121,18 +122,21 @@ console.log(res);
         });
     }
 
+   draw_rm({over:[5, 9, 6, 3, 10],unover:[15, 3, 1, 22, 30],order:['102SC2111030', '102SC2111019', '102SC2111016', '102SC2110148', '102SC2110138']});
+
     function doCase(res){
-        // console.log(res);
+        console.log(res);
         switch(res.case) {
             case 'ok':
+                if(typeof(res.data.fd) !== 'undefined') $('#fd').append('(' + res.data.fd + ')');
                 if(typeof(res.data.title) !== 'undefined') $('#tag_title').html(res.data.title);
                 if(typeof(res.data.block_data) !== 'undefined') draw_block_data(res.data.block_data);
                 if(typeof(res.data.today_task) !== 'undefined') draw_lb(res.data.today_task);
                 if(typeof(res.data.now_line) !== 'undefined') draw_now_line(res.data.now_line);
-                // draw_now_line(res.data.now_line)
                 if(typeof(res.data.roll) !== 'undefined') {
                     addRoll(res.data.roll.list);
-                    $('#roll_list_updated').html(res.data.roll.roll_list_updated);
+                    draw_rm(res.data.over_order);
+                    $('#list_updated').html(res.data.roll.list_updated);
                 }
                 break;
             case 'jump':
@@ -143,6 +147,7 @@ console.log(res);
 
     var MyMarhq = ''; //table滚动放到函数外,否则表格会颤抖
     function addRoll(data) {
+        data = data.slice(0, -1); // 尾部总多一行,原因未知
         $('#roll').html('');
         for (var i in data) {
             $("#roll").prepend(`
@@ -157,6 +162,55 @@ console.log(res);
         }
         rollTable();
     };
+
+    function draw_rm(data){
+        /** 渲染周统计图表 */
+        var myCharts2 = echarts.init(document.getElementById('consoleChartsWeek'));
+        var options2 = {
+            tooltip: {trigger: 'axis', axisPointer: {lineStyle: {color: '#E0E0E0'}}},
+            color: ['#00FF84', '#F14658'],
+            // legend: {
+            //     orient: 'vertical', right: '0px', top: '0px',
+            //     data: ['完工', '未完工'], textStyle: {color: '#595959'}
+            // },
+            grid: {top: '35px', left: '35px', right: '55px', bottom: '55px'},
+            xAxis: {
+                name: '订单',
+                nameTextStyle: {color: '#595959'},
+                type: 'category',
+                // data: ['102SC2111030', '102SC2111019', '102SC2111016', '102SC2110148', '102SC2110138'],
+                data: data.order,
+                axisLine: {lineStyle: {color: '#E0E0E0'}, symbol: ['none', 'arrow'], symbolOffset: [0, 10]},
+                axisLabel: {color: '#8c8c8c',interval:0,rotate:-30},
+
+                axisTick: {alignWithLabel: true}
+            },
+            yAxis: {
+                name: '状态',
+                nameTextStyle: {color: '#595959'},
+                type: 'value',
+                boundaryGap: ['0', '20%'],
+                axisTick: {show: false},
+                axisLine: {lineStyle: {color: '#E0E0E0'}, symbol: ['none', 'arrow'], symbolOffset: [0, 10]},
+                axisLabel: {color: '#8c8c8c'},
+                splitLine: {show: false},
+                splitArea: {show: false},
+                minInterval: 1
+            },
+            series: [{
+                name: '完工', type: 'bar', stack: 'one', barMaxWidth: '30px',
+                label: {normal: {show: true, position: 'inside'}},
+                data: data.over
+            }, {
+                name: '未完工', type: 'bar', stack: 'one', barMaxWidth: '30px',
+                label: {normal: {show: true, position: 'inside'}},
+                data: data.unover
+            }]
+        };
+        myCharts2.setOption(options2);
+        // 赋值
+        myCharts2.setOption(data);
+    }
 
     function rollTable(){
         // var MyMarhq = '';

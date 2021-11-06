@@ -29,6 +29,10 @@ class Base extends Controller
         }
     }
 
+    protected function writeToJson($data,$case = 'ok'){
+        return json_encode(compact('case','data'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
     protected function clientRealIP($headerName = 'x-real-ip')
     {
         $server = ServerManager::getInstance()->getSwooleServer();

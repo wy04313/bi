@@ -3,14 +3,14 @@
 namespace App\Task;
 
 use EasySwoole\Task\AbstractInterface\TaskInterface;
-use EasySwoole\Mysqli\QueryBuilder;
+// use EasySwoole\Mysqli\QueryBuilder;
 use App\Model\WTest2021Model;
-use App\Model\WDataModel;
 use App\MongoDb\Driver;
 use App\MongoDb\MongoClient;
 
-use App\Task\MyQueue;
-use EasySwoole\Queue\Job;
+use EasySwoole\EasySwoole\ServerManager;
+use App\Task\OnlineUser;
+use App\Task\Mysql;
 
 class MysqlToMongoDB implements TaskInterface
 {
@@ -54,14 +54,18 @@ class MysqlToMongoDB implements TaskInterface
         }
 
         if($err) {
-            WDataModel::create()->update(['b3' => QueryBuilder::inc($err)], ['date' => (int)date('Ymd')]);
+            $redis = \EasySwoole\Pool\Manager::getInstance()->get('redis')->getObj();
+            $redis->select(15);
+            $redis->incrby('line_3305_block_b3', $err);
+            \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
 
-            $job = new Job();
-            $job->setJobData([
-                'cate' => 'line',
-                'data' => [],
-            ]);
-            MyQueue::getInstance()->producer()->push($job);
+            $users = OnlineUser::getInstance()->table();
+            $server = ServerManager::getInstance()->getSwooleServer();
+
+            foreach ($users as $v) {
+                if($v['page_name'] === 'line3305' || $v['page_name'] === 'total')
+                    $server->push($v['fd'], $this->writeToJson(Mysql::getInstance()->getPageData($v['page_name']), 'ok'));
+            }
         }
         if($insertData) {
             MongoClient::getInstance()->invoke()->callback(function (Driver $driver) use($insertData, $stationLog){
@@ -80,6 +84,10 @@ class MysqlToMongoDB implements TaskInterface
             });
             WTest2021Model::create()->update(['sync'  => time()], $ids);
         }
+    }
+
+    protected function writeToJson($data,$case = 'ok'){
+        return json_encode(compact('case','data'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     private function getStationId($station_id){

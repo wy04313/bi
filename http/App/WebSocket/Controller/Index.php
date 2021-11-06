@@ -7,9 +7,9 @@ use EasySwoole\EasySwoole\Task\TaskManager;
 use EasySwoole\Http\AbstractInterface\Controller;
 
 use App\Task\OnlineUser;
-use App\Task\Push;
+use App\Task\Mysql;
+use App\Model\WDataModel;
 use App\Model\WDataPagesModel;
-
 
 /**
  * Class Index
@@ -27,8 +27,25 @@ class Index extends Base
         $res = $this->getPage($params['created']);
         $res['fd'] = $this->caller()->getClient()->getFd();
         $case = $res['url'] ? 'jump' : 'Do_nothing';
-        $this->response()->setMessage($this->whiteToJson(0,'OK',$res,  $case));
+        $this->response()->setMessage($this->writeToJson(0,'OK',$res,  $case));
 
+    }
+
+    // 由导航进入,这里一定是配置过IP页面的,或是由推送跳转的
+    public function getData(){
+        $params = $this->caller()->getArgs();
+
+        $created = $params['created'];
+        $page_name = $params['page_name'];
+        $res = $this->getPage($created);
+
+        $fd = $this->caller()->getClient()->getFd();
+        OnlineUser::getInstance()->set($fd, (int)$created, $page_name);
+
+        $data = Mysql::getInstance()->getPageData($page_name);
+        $data['title'] = $res['title'];
+        $data['fd'] = $fd;
+        $this->response()->setMessage($this->writeToJson(0,'OK',$data, 'ok'));
     }
 
     private function getPage($created){
@@ -47,25 +64,6 @@ class Index extends Base
             WDataPagesModel::create()->data(['created' => $created], false)->save();
         }
         return $res;
-    }
-
-    // 由导航进入,这里一定是配置过IP页面的,或是由推送跳转的
-    public function getData(){
-        $params = $this->caller()->getArgs();
-
-        $created = $params['created'];
-        $page_name = $params['page_name'];
-        $res = $this->getPage($created);
-
-        $fd = $this->caller()->getClient()->getFd();
-        OnlineUser::getInstance()->set($fd, (int)$created);
-
-        if($page_name === 'line3305') {
-            $data = Push::getInstance()->getMysqlData('line');
-            $data['title'] = $res['title'];
-        }
-        $this->response()->setMessage($this->whiteToJson(0,'OK',$data, 'ok'));
-
     }
 
     function delay()
@@ -88,7 +86,6 @@ class Index extends Base
     // 心跳
     function heartbeat()
     {
-// echo 'PONG'.PHP_EOL;
         $fd = $this->caller()->getClient()->getFd();
         OnlineUser::getInstance()->update($fd);
         $this->response()->setMessage('PONG');
