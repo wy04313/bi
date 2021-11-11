@@ -1,5 +1,4 @@
 ﻿$(function() {
-    var cost_type = getQueryVariable('cost_type');
     var lockReconnect = false;//避免重复连接
     var ws = null; //WebSocket的引用
     // var wsUrl = "ws://10.10.5.25:9900"; //这个要与后端提供的相同
@@ -33,7 +32,7 @@
             createWebSocket(wsUrl);
             console.log("正在重连......")
             reconnect.lockReconnect = false;
-        }, 60000); //这里设置重连间隔(ms)
+        }, 30000); //这里设置重连间隔(ms)
     }
 
      /*********************初始化开始**********************/
@@ -45,7 +44,6 @@
         // 收到服务器消息后响应
         ws.onmessage = function(e) {
             heartCheck.reset().start();//如果获取到消息，心跳检测重置 拿到任何消息都说明当前连接是正常的
-// console.log(e.data);
             if(e.data !== 'PONG') {
                 // var res = eval('(' + e.data + ')');
                 var res = JSON.parse(e.data);
@@ -53,11 +51,11 @@
             }
         }
         ws.onclose = function() {
-            $('#tag_title').html('服务端关闭,请联系IT');
+            $('#tag_title').html('服务端关闭，请联系IT。');
             reconnect(wsUrl);
         }
         ws.onerror = function () {
-            $('#tag_title').html('服务端异常,请联系IT');
+            $('#tag_title').html('服务端异常，请联系IT。');
             reconnect(wsUrl);
         };
     }
@@ -100,7 +98,6 @@
     //读取cookies
     function getCookie(name) {
         var arr, reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
-
         if (arr = document.cookie.match(reg)) return unescape(arr[2]);
         else return null;
     }
@@ -117,18 +114,14 @@
                 orderInfoDiv.innerHTML = html;
             });
 
-
-
         });
     }
 
-   draw_rm({over:[5, 9, 6, 3, 10],unover:[15, 3, 1, 22, 30],order:['102SC2111030', '102SC2111019', '102SC2111016', '102SC2110148', '102SC2110138']});
-
     function doCase(res){
-        console.log(res);
+        // console.log(res);
         switch(res.case) {
             case 'ok':
-                if(typeof(res.data.fd) !== 'undefined') $('#fd').append('(' + res.data.fd + ')');
+                if(typeof(res.data.fd) !== 'undefined') $('#fd').html('(' + res.data.fd + ')');
                 if(typeof(res.data.title) !== 'undefined') $('#tag_title').html(res.data.title);
                 if(typeof(res.data.block_data) !== 'undefined') draw_block_data(res.data.block_data);
                 if(typeof(res.data.today_task) !== 'undefined') draw_lb(res.data.today_task);
@@ -207,9 +200,14 @@
                 data: data.unover
             }]
         };
+        // myCharts2.setOption(options2);
+
         myCharts2.setOption(options2);
-        // 赋值
-        myCharts2.setOption(data);
+        window.addEventListener("resize",function(){
+            myCharts2.resize();
+        });
+
+
     }
 
     function rollTable(){
@@ -244,16 +242,6 @@
             })
 
         }
-    }
-
-    function getQueryVariable(variable){
-           var query = window.location.search.substring(1);
-           var vars = query.split("&");
-           for (var i=0;i<vars.length;i++) {
-                   var pair = vars[i].split("=");
-                   if(pair[0] == variable){return pair[1];}
-           }
-           return(false);
     }
 
     function draw_lb(res){
@@ -386,7 +374,7 @@
                 },
                 legend: {
                     x: 'right',
-                    data: ['计划产量','已关联','完工数量'],
+                    data: ['计划产量','已关联'],
                     textStyle: {
                         color: '#9191c2',
                         fontSize: 16,
@@ -538,33 +526,6 @@
                         },
                         symbol: 'emptydiamond',
                         data:res.data_y2,
-                        barGap: '100%'
-                    },
-                    {
-                        name: '完工数量',
-                        type: 'bar',
-                        barWidth: 42,
-                        itemStyle: {
-                            normal: {
-                                label: {
-                                    show: true, //开启显示
-                                    position: 'top', //在上方显示
-                                    textStyle: { //数值样式
-                                        fontSize: 24,
-                                        color: '#F7BA88'
-                                    }
-                                },
-                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                                    offset: 0,
-                                    color: '#FF6600'
-                                }, {
-                                    offset: 1,
-                                    color: '#F4F110'
-                                }]),
-                            }
-                        },
-                        symbol: 'emptydiamond',
-                        data:res.data_y3,
                         barGap: '100%'
                     }
                 ]

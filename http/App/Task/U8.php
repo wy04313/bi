@@ -21,6 +21,11 @@ class U8 implements TaskInterface
             3305 电控
             3306 电机定子
             3307 电机总装
+
+            MoCode 完工/未完工信息
+            expQty 部门未完工订单的计划产量总数
+            expQty 部门未完工订单的已入库总数
+
          */
         $dept = [
             '3302' => ['MoCode' => [],'InvCode' => [], 'expQty' => 0, 'inQty' => 0],
@@ -57,13 +62,18 @@ class U8 implements TaskInterface
             foreach ($dept as $k => $v) {
                 $redisData["line_{$k}_today_task"] = $this->formatToJson($v);
                 $redisData["line_{$k}_today_task_last_updated"] = date('m/d H:i:s');
+
+
+                $redisData["line_{$k}_block_b4"] = $v['inQty'];//完工数量
+                $redisData["line_{$k}_block_b4_last_updated"] = date('m/d H:i');
+
+                $redisData["line_{$k}_block_b5"] = count($v['MoCode']);//未完工订单数
+                $redisData["line_{$k}_block_b5_last_updated"] = date('m/d H:i');
             }
             $redis->mSet($redisData);
         }
 
-
         // 生产缺料推送 滚动数据最少拉取10条
-
         $rollList = $this->getAllFromU8("
             select tba.*,isnull(tbb.qty,0) as qty,isnull(tbb.qty,0)-tba.reqQty as isQue from (
             select c.InvCode,sum(c.qty - c.baseqtyn/c.baseqtyd*e.inQty) as reqQty --剩余的真实需用量
@@ -86,7 +96,7 @@ class U8 implements TaskInterface
             foreach($rollList as &$v) {
                 $v['reqQty'] = round($v['reqQty'],2);
                 $v['isQue'] = round($v['isQue'],2);
-                $v['qty'] = (int)$v['isQue'];
+                $v['qty'] = (int)$v['qty'];
                 $v['level'] = $this->getLevel($v);
             }
 
@@ -157,7 +167,7 @@ class U8 implements TaskInterface
     // '3302' => ['MoCode' => [],'InvCode' => [], 'expQty' => 0, 'inQty' => 0],
     private function formatLineData($data){
         return [
-            'title' => '未完工订单统计',
+            'title' => "未完工订单累计: {$data['expQty']} pcs",
             'per' => round($data['inQty']/$data['expQty']*100),
             'last_updated' => date('m/d H:i:s')
         ];

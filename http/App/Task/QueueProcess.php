@@ -23,7 +23,6 @@ class QueueProcess extends AbstractProcess
 
                 switch ($cate) {
                     case 'lessMaterial':# 缺料全页面推送
-                    // echo $que['data']['roll']['roll_list_updated'].PHP_EOL;
                         foreach ($users as $v) {
                             $server->push($v['fd'], $this->whiteToJson($que['data'], 'ok'));
                         }
@@ -42,7 +41,6 @@ class QueueProcess extends AbstractProcess
                             $server->push((INT)$que['data']['fd'], $this->whiteToJson(['url' => $que['data']['url']], 'jump'));
                         }
                         break;
-
                 }
             });
         });

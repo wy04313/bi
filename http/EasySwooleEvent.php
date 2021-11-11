@@ -84,17 +84,17 @@ class EasySwooleEvent implements Event
         Crontab::getInstance()->addTask(\App\Task\InitTask::class);
 
         // 队列
-        $redisConfig = new \EasySwoole\Redis\Config\RedisConfig(Config::getInstance()->getConf('MES_QUEUE'));
-        // 配置 队列驱动器
-        $driver = new \EasySwoole\Queue\Driver\RedisQueue($redisConfig, 'fuck_fzw');
-        MyQueue::getInstance($driver);
-        // 注册一个消费进程
-        $processConfig = new \EasySwoole\Component\Process\Config([
-            'processName' => 'QueueProcess', // 设置 自定义进程名称
-            'processGroup' => 'Queue', // 设置 自定义进程组名称
-            'enableCoroutine' => true, // 设置 自定义进程自动开启协程
-        ]);
-        \EasySwoole\Component\Process\Manager::getInstance()->addProcess(new QueueProcess($processConfig));
+        // $redisConfig = new \EasySwoole\Redis\Config\RedisConfig(Config::getInstance()->getConf('MES_QUEUE'));
+        // // 配置 队列驱动器
+        // $driver = new \EasySwoole\Queue\Driver\RedisQueue($redisConfig, 'fuck_fzw');
+        // MyQueue::getInstance($driver);
+        // // 注册一个消费进程
+        // $processConfig = new \EasySwoole\Component\Process\Config([
+        //     'processName' => 'QueueProcess', // 设置 自定义进程名称
+        //     'processGroup' => 'Queue', // 设置 自定义进程组名称
+        //     'enableCoroutine' => true, // 设置 自定义进程自动开启协程
+        // ]);
+        // \EasySwoole\Component\Process\Manager::getInstance()->addProcess(new QueueProcess($processConfig));
 
         $register->add(EventRegister::onWorkerStart, function (\swoole_server $server, $workerId) {
             if ($workerId == 0) {
@@ -104,13 +104,15 @@ class EasySwooleEvent implements Event
                     OnlineUser::getInstance()->heartbeatCheck(); //检查心跳
                 });
 
-                // \EasySwoole\Component\Timer::getInstance()->loop(60 * 1000, function () {
-                //     // 在生产使用再打开
-                //     go(function (){
-                //         $syncTask = \EasySwoole\EasySwoole\Task\TaskManager::getInstance();
-                //         $syncTask->sync(new \App\Task\MysqlToMongoDB()); // vb到mysql的数据导入到mongodb
-                //     });
-                // });
+                // 每分钟执行的任务
+                \EasySwoole\Component\Timer::getInstance()->loop(6 * 1000, function () {
+                    $syncTask = \EasySwoole\EasySwoole\Task\TaskManager::getInstance();
+                    $syncTask->sync(new \App\Task\MinuteTask());
+                    // 考勤打卡人数
+                    if(date('H') < 12) {
+                        $syncTask->async(new \App\Task\Hrm());
+                    }
+                });
             }
         });
     }

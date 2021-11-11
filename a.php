@@ -6,6 +6,24 @@ date_default_timezone_set('Asia/Shanghai');
 
 
 
+$a = [];
+
+$a = array_merge($a, ['1','2',3]);
+
+print_r($a);die;
+
+
+
+
+
+die;
+throw new Exception("抛出异常");die;
+
+echo date('Y-m-d 05:00:00');die;
+
+
+
+
 
 
 

@@ -35,7 +35,7 @@ return [
         'charset'              => 'utf8mb4',//字符编码
         'strict_type'          => false, //开启严格模式，返回的字段将自动转为数字类型
         'fetch_mode'           => false,//开启fetch模式, 可与pdo一样使用fetch/fetchAll逐行或获取全部结果集(4.0版本以上)
-        'returnCollection'     => false, //返回集合
+        'returnCollection'     => true, //返回集合
         'alias'                => '',//子查询别名
         'isSubQuery'           => false,//是否为子查询
         'max_reconnect_times ' => '3',//最大重连次数
