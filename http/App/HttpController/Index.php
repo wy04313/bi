@@ -22,12 +22,11 @@ class Index extends Base
                 }
                 break;
             /*
-                'cate' => 'block_data',
+                'cate' => 'block_data_watt_meter',
                 'cost_type' => $cost_type,
-                'data' => $data ? json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : 0,
                 有data表示有数据要存储,此时传入的key就是要存储的key
              */
-            case 'block_data':# 推送温度
+            case 'block_data_watt_meter':# 推送温度和电表总表
                 if(!empty(($params['data']))){
                     $data = json_decode($params['data'],true);
                     $redis = \EasySwoole\Pool\Manager::getInstance()->get('redis')->getObj();
@@ -40,9 +39,29 @@ class Index extends Base
                 foreach ($users as $v) {
                     if($v['page_name'] === $page)
                         $server->push($v['fd'], $this->writeToJson(Mysql::getInstance()->getLinePageData($page,'block_data'), 'ok'));
+                    else
+                        $server->push($v['fd'], $this->writeToJson(Mysql::getInstance()->getTotalPageData('total','dashboard,watt_meter_weeks'), 'ok'));
+
                 }
                 break;
+            /*
+                'cate' => 'watt_meter',
+                'cost_type' => $cost_type,
+                'data' => 33425.35;
+             */
+            case 'watt_meter':# 推送电表,写入redis后推送(电表度数和7日用量)
+                $db = $params['data'];
+                $redis = \EasySwoole\Pool\Manager::getInstance()->get('redis')->getObj();
+                $redis->select(15);
 
+                $redis->LINDEX('watt_meter_weeks', $db); //当前度数
+
+                \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
+                foreach ($users as $v) {
+                    if($v['page_name'] === 'total')
+                        $server->push($v['fd'],$this->writeToJson(Mysql::getInstance()->getTotalPageData('total','dashboard,watt_meter_weeks', 'ok')));
+                }
+                break;
 
             /*
                 'cate' => 'test_error',

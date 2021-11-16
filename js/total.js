@@ -1,21 +1,229 @@
-﻿// 新增的关联关系列表
-function add_relation(data) {
-  for (var i in data) {
-    $("table tr:not(:first):not(:first):last").remove();//移除最后一行,并且保留前两行
-    $(".fuck").prepend(`
-                  <tr>
-                      <td>车间生产</td>
-                      <td>CDU223A</td>
-                      <td>新增一组关联</td>
-                      <td>2015年</td>
-                  </tr>
-          `).insertAfter('.add_relation');
-  }
-};
+﻿$(function() {
 
 
-// 温湿度及耗电量
-function echarts_1(res) {
+
+
+  // echarts_1({yield_rate:93.69,wd:23,sd:0.39,power:14.25}); // 温湿度及耗电量
+  // seven_days({x:['周一', '周二', '周三', '周四', '周五', '周六', '周日'],y:[1500, 1200, 600, 200, 300, 300, 100]});
+  // trend_chart({name:['2110087', '2110064', '2110085','21109016','21108016','21109016','21109016','21109016','21109016','21109016','2110087', '2110064', '2110085','21109016','21108016','21109016','21109016','21109016','21109016','21109016','21109016','21109016','21109016','21109016'],v1:[500,200,300,1000,500,500,200,300,1000,500,500,200,300,1000,500,500,200,300,1000,500,500,200,300,1000],v2:[120,150,220,120,150,220,120,150,220,120,150,220,120,150,220,120,150,220,120,150,220,220,345,100]}); //右一趋势图
+  // echarts_31();
+  // echarts_32();
+  // echarts_33();
+  // echarts_5({x:['浙江', '上海', '江苏', '广东', '北京', '深圳', '安徽', '四川'],y:[2, 3, 3, 9, 15, 12, 6, 4, 6, 7, 4, 10]});
+  echarts_6();
+  // progress_bar({name:['CDU产线', 'HVB产线', 'EDU产线', 'VPU产线', 'UNK产线','FUK产线'],value:[80,40,60,99,80,90]});
+
+
+
+
+
+
+    var lockReconnect = false;//避免重复连接
+    var ws = null; //WebSocket的引用
+    // var wsUrl = "ws://10.10.5.25:9900"; //这个要与后端提供的相同
+    var wsUrl = "ws://10.0.7.254:9900"; //这个要与后端提供的相同
+    var created = getCookie('created');
+    if(created === null) {
+        var created = (new Date()).valueOf();
+        setCookie('created', created);
+    }
+
+    function pageName(){
+        var a = location.href;
+        var b = a.split("/");
+        var c = b.slice(b.length-1, b.length).toString(String).split(".");
+        return c.slice(0, 1)[0];
+    }
+
+    function createWebSocket(){
+        try {
+            ws = new WebSocket(wsUrl);
+            initEventHandle();
+        } catch (e) {
+            reconnect(wsUrl);
+        }
+    }
+    function reconnect(url) {
+        if(lockReconnect) return;
+        lockReconnect = true;
+        //没连接上会一直重连，设置延迟避免请求过多
+        setTimeout(function () {
+            createWebSocket(wsUrl);
+            console.log("正在重连......")
+            reconnect.lockReconnect = false;
+        }, 30000); //这里设置重连间隔(ms)
+    }
+
+     /*********************初始化开始**********************/
+    function initEventHandle() {
+        ws.onopen = function() {
+            ws.send(JSON.stringify({controller:'Index',action:'getData',params:{page_name:pageName(),created:created}}));
+            heartCheck.reset().start();//心跳检测重置
+        }
+        // 收到服务器消息后响应
+        ws.onmessage = function(e) {
+            heartCheck.reset().start();//如果获取到消息，心跳检测重置 拿到任何消息都说明当前连接是正常的
+            if(e.data !== 'PONG') {
+                // var res = eval('(' + e.data + ')');
+                var res = JSON.parse(e.data);
+                doCase(res);
+            }
+        }
+        ws.onclose = function() {
+            $('#tag_title').html('服务端关闭，请联系IT。');
+            reconnect(wsUrl);
+        }
+        ws.onerror = function () {
+            $('#tag_title').html('服务端异常，请联系IT。');
+            reconnect(wsUrl);
+        };
+    }
+
+    //心跳检测
+    var heartCheck = {
+        timeout: 5000,//毫秒
+        timeoutObj: null,
+        serverTimeoutObj: null,
+        reset: function(){
+            clearTimeout(this.timeoutObj);
+            clearTimeout(this.serverTimeoutObj);
+            return this;
+        },
+        start: function(){
+            var self = this;
+            this.timeoutObj = setTimeout(function(){
+                //这里发送一个心跳，后端收到后，返回一个心跳消息，onmessage拿到返回的心跳就说明连接正常
+                ws.send("PING");
+                self.serverTimeoutObj = setTimeout(function(){//如果超过一定时间还没重置，说明后端主动断开了
+                }, self.timeout)
+            }, this.timeout)
+        }
+    }
+
+
+    // 强制退出
+    window.onunload = function() {
+        ws.close();
+    }
+    createWebSocket(wsUrl);/**启动连接**/
+    //写cookies
+    function setCookie(name, value) {
+        var Days = 99999;
+        var exp = new Date();
+        exp.setTime(exp.getTime() + Days * 24 * 60 * 60 * 1000);
+        document.cookie = name + "=" + escape(value) + ";expires=" + exp.toGMTString();
+    }
+
+    //读取cookies
+    function getCookie(name) {
+        var arr, reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
+        if (arr = document.cookie.match(reg)) return unescape(arr[2]);
+        else return null;
+    }
+
+    function doCase(res){
+        // console.log(res);
+        switch(res.case) {
+            case 'ok':
+                if(typeof(res.data.fd) !== 'undefined') $('#fd').html('(' + res.data.fd + ')');
+                if(typeof(res.data.title) !== 'undefined') $('#tag_title').html(res.data.title);
+                if(typeof(res.data.dashboard) !== 'undefined') echarts_1(res.data.dashboard);
+                if(typeof(res.data.watt_meter_weeks) !== 'undefined') seven_days(res.data.watt_meter_weeks);
+                if(typeof(res.data.block_data) !== 'undefined') {
+                    echarts_31(res.data.p3305);
+                    echarts_32(res.data.p3302);
+                    echarts_33(res.data.p3307);
+                    blockData(res.data.block_data);
+                }
+                if(typeof(res.data.roll) !== 'undefined') addRoll(res.data.roll.list);
+                if(typeof(res.data.total_in_todays) !== 'undefined') echarts_5(res.data.total_in_todays);
+                if(typeof(res.data.equ_used) !== 'undefined') progress_bar(res.data.equ_used);
+                if(typeof(res.data.unover) !== 'undefined') trend_chart(res.data.unover);
+
+
+
+
+
+                // if(typeof(res.data.today_task) !== 'undefined') draw_lb(res.data.today_task);
+                // if(typeof(res.data.now_line) !== 'undefined') draw_now_line(res.data.now_line);
+                // if(typeof(res.data.roll) !== 'undefined') {
+                //     addRoll(res.data.roll.list);
+                //     draw_rm(res.data.over_order);
+                //     $('#list_updated').html(res.data.roll.list_updated);
+                // }
+                break;
+            case 'jump':
+                window.location.href = res.data.url;
+                break;
+        }
+    }
+
+    var MyMarhq = ''; //table滚动放到函数外,否则表格会颤抖
+    function addRoll(data) {
+        data = data.slice(0, -1); // 尾部总多一行,原因未知
+        $('#roll').html('');
+        for (var i in data) {
+            $("#roll").prepend(`
+                    <tr>
+                        <td>${data[i].id}</td>
+                        <td>${data[i].InvCode}</td>
+                        <td>${data[i].reqQty}</td>
+                        <td>${data[i].qty}</td>
+                        <td>${data[i].isQue}</td>
+                        <td>${data[i].level}</td>
+                    </tr>
+                `).insertAfter('.add_relation');
+        }
+        rollTable();
+    };
+
+    function blockData(res){
+        // console.log(res);
+        $('#total_b0').html(res.total_b0);
+        $('#total_b1').html(res.total_b1);
+        $('#total_b3').html(res.total_b3);
+        $('#total_in_today').html(res.total_in_today);
+        $('#total_in_year').html(res.total_in_year);
+        $('#total_in_year_title').html(res.total_in_year_title);
+        $('#total_in_all').html(res.total_in_all);
+    }
+
+    function rollTable(){
+        // var MyMarhq = '';
+        clearInterval(MyMarhq);
+        var item = $('.tbl-body tbody tr').length
+        // console.log(item)
+
+        if(item> 4){
+            $('.tbl-body tbody').html($('.tbl-body tbody').html()+$('.tbl-body tbody').html());
+            $('.tbl-body').css('top', '0');
+            var tblTop = 0;
+            var speedhq = 50; // 数值越大越慢
+            var outerHeight = $('.tbl-body tbody').find("tr").outerHeight();
+            function Marqueehq(){
+                if(tblTop <= -outerHeight*item){
+                    tblTop = 0;
+                } else {
+                    tblTop -= 1;
+                }
+                $('.tbl-body').css('top', tblTop+'px');
+            }
+
+            MyMarhq = setInterval(Marqueehq,speedhq);
+
+            // 鼠标移上去取消事件
+            $(".tbl-body tbody").hover(function (){
+                clearInterval(MyMarhq);
+            },function (){
+                clearInterval(MyMarhq);
+                MyMarhq = setInterval(Marqueehq,speedhq);
+            })
+
+        }
+    }
+
+    // 温湿度及耗电量
+    function echarts_1(res) {
         // 基于准备好的dom，初始化echarts实例
         var myChart = echarts.init(document.getElementById('echart1'));
         option = {
@@ -337,7 +545,7 @@ function seven_days(res) {
             },
             xAxis: [{
                 type: 'category',
-              		data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+              		data: res.x,
                 axisLine: {
                     show: true,
                  lineStyle: {
@@ -392,7 +600,7 @@ function seven_days(res) {
             	{
 
                 type: 'bar',
-                data: res,
+                data: res.y,
                 barWidth:'35%', //柱子宽度
                // barGap: 1, //柱子之间间距
                 itemStyle: {
@@ -413,7 +621,7 @@ function seven_days(res) {
             myChart.resize();
         });
     }
-function echarts_5() {
+function echarts_5(res) {
         // 基于准备好的dom，初始化echarts实例
         var myChart = echarts.init(document.getElementById('echart5'));
 
@@ -435,7 +643,7 @@ function echarts_5() {
     },
     xAxis: [{
         type: 'category',
-      		data: ['浙江', '上海', '江苏', '广东', '北京', '深圳', '安徽', '四川'],
+      		data: res.x,
         axisLine: {
             show: true,
          lineStyle: {
@@ -488,7 +696,7 @@ function echarts_5() {
     }],
     series: [{
         type: 'bar',
-        data: [2, 3, 3, 9, 15, 12, 6, 4, 6, 7, 4, 10],
+        data: res.y,
         barWidth:'35%', //柱子宽度
        // barGap: 1, //柱子之间间距
         itemStyle: {
@@ -670,141 +878,141 @@ function trend_chart(res) {
         });
     }
 function echarts_6() {
-        // 基于准备好的dom，初始化echarts实例
-        var myChart = echarts.init(document.getElementById('echart6'));
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('echart6'));
 
-        var dataStyle = {
-	normal: {
-		label: {
-			show: false
-		},
-		labelLine: {
-			show: false
-		},
-		//shadowBlur: 40,
-		//shadowColor: 'rgba(40, 40, 40, 1)',
-	}
-};
-var placeHolderStyle = {
-	normal: {
-		color: 'rgba(255,255,255,.05)',
-		label: {show: false,},
-		labelLine: {show: false}
-	},
-	emphasis: {
-		color: 'rgba(0,0,0,0)'
-	}
-};
-option = {
-	color: ['#0f63d6', '#0f78d6', '#0f8cd6', '#0fa0d6', '#0fb4d6'],
-	tooltip: {
-		show: true,
-		formatter: "{a} : {c} "
-	},
-	legend: {
-		itemWidth: 10,
-        itemHeight: 10,
-		itemGap: 12,
-		bottom: '3%',
+    var dataStyle = {
+    	normal: {
+    		label: {
+    			show: false
+    		},
+    		labelLine: {
+    			show: false
+    		},
+    		//shadowBlur: 40,
+    		//shadowColor: 'rgba(40, 40, 40, 1)',
+    	}
+    };
+    var placeHolderStyle = {
+    	normal: {
+    		color: 'rgba(255,255,255,.05)',
+    		label: {show: false,},
+    		labelLine: {show: false}
+    	},
+    	emphasis: {
+    		color: 'rgba(0,0,0,0)'
+    	}
+    };
+    option = {
+    	color: ['#0f63d6', '#0f78d6', '#0f8cd6', '#0fa0d6', '#0fb4d6'],
+    	tooltip: {
+    		show: true,
+    		formatter: "{a} : {c} "
+    	},
+    	legend: {
+    		itemWidth: 10,
+            itemHeight: 10,
+    		itemGap: 12,
+    		bottom: '3%',
 
-		data: ['浙江', '上海', '广东', '北京', '深圳'],
-		textStyle: {
-                    color: 'rgba(255,255,255,.6)',
-                }
-	},
+    		data: ['浙江', '上海', '广东', '北京', '深圳'],
+    		textStyle: {
+                        color: 'rgba(255,255,255,.6)',
+                    }
+    	},
 
-	series: [
-		{
-		name: '浙江',
-		type: 'pie',
-		clockWise: false,
-		center: ['50%', '42%'],
-		radius: ['59%', '70%'],
-		itemStyle: dataStyle,
-		hoverAnimation: false,
-		data: [{
-			value: 80,
-			name: '01'
-		}, {
-			value: 20,
-			name: 'invisible',
-			tooltip: {show: false},
-			itemStyle: placeHolderStyle
-		}]
-	},
-		{
-		name: '上海',
-		type: 'pie',
-		clockWise: false,
-		center: ['50%', '42%'],
-		radius: ['49%', '60%'],
-		itemStyle: dataStyle,
-		hoverAnimation: false,
-		data: [{
-			value: 70,
-			name: '02'
-		}, {
-			value: 30,
-			name: 'invisible',
-			tooltip: {show: false},
-			itemStyle: placeHolderStyle
-		}]
-	},
-		{
-		name: '广东',
-		type: 'pie',
-		clockWise: false,
-		hoverAnimation: false,
-		center: ['50%', '42%'],
-		radius: ['39%', '50%'],
-		itemStyle: dataStyle,
-		data: [{
-			value: 65,
-			name: '03'
-		}, {
-			value: 35,
-			name: 'invisible',
-			tooltip: {show: false},
-			itemStyle: placeHolderStyle
-		}]
-	},
-		{
-		name: '北京',
-		type: 'pie',
-		clockWise: false,
-		hoverAnimation: false,
-		center: ['50%', '42%'],
-		radius: ['29%', '40%'],
-		itemStyle: dataStyle,
-		data: [{
-			value: 60,
-			name: '04'
-		}, {
-			value: 40,
-			name: 'invisible',
-			tooltip: {show: false},
-			itemStyle: placeHolderStyle
-		}]
-	},
-		{
-		name: '深圳',
-		type: 'pie',
-		clockWise: false,
-		hoverAnimation: false,
-		center: ['50%', '42%'],
-		radius: ['20%', '30%'],
-		itemStyle: dataStyle,
-		data: [{
-			value: 50,
-			name: '05'
-		}, {
-			value: 50,
-			name: 'invisible',
-			tooltip: {show: false},
-			itemStyle: placeHolderStyle
-		}]
-	}, ]
-};
+    	series: [
+    		{
+    		name: '浙江',
+    		type: 'pie',
+    		clockWise: false,
+    		center: ['50%', '42%'],
+    		radius: ['59%', '70%'],
+    		itemStyle: dataStyle,
+    		hoverAnimation: false,
+    		data: [{
+    			value: 80,
+    			name: '01'
+    		}, {
+    			value: 20,
+    			name: 'invisible',
+    			tooltip: {show: false},
+    			itemStyle: placeHolderStyle
+    		}]
+    	},
+    		{
+    		name: '上海',
+    		type: 'pie',
+    		clockWise: false,
+    		center: ['50%', '42%'],
+    		radius: ['49%', '60%'],
+    		itemStyle: dataStyle,
+    		hoverAnimation: false,
+    		data: [{
+    			value: 70,
+    			name: '02'
+    		}, {
+    			value: 30,
+    			name: 'invisible',
+    			tooltip: {show: false},
+    			itemStyle: placeHolderStyle
+    		}]
+    	},
+    		{
+    		name: '广东',
+    		type: 'pie',
+    		clockWise: false,
+    		hoverAnimation: false,
+    		center: ['50%', '42%'],
+    		radius: ['39%', '50%'],
+    		itemStyle: dataStyle,
+    		data: [{
+    			value: 65,
+    			name: '03'
+    		}, {
+    			value: 35,
+    			name: 'invisible',
+    			tooltip: {show: false},
+    			itemStyle: placeHolderStyle
+    		}]
+    	},
+    		{
+    		name: '北京',
+    		type: 'pie',
+    		clockWise: false,
+    		hoverAnimation: false,
+    		center: ['50%', '42%'],
+    		radius: ['29%', '40%'],
+    		itemStyle: dataStyle,
+    		data: [{
+    			value: 60,
+    			name: '04'
+    		}, {
+    			value: 40,
+    			name: 'invisible',
+    			tooltip: {show: false},
+    			itemStyle: placeHolderStyle
+    		}]
+    	},
+    		{
+    		name: '深圳',
+    		type: 'pie',
+    		clockWise: false,
+    		hoverAnimation: false,
+    		center: ['50%', '42%'],
+    		radius: ['20%', '30%'],
+    		itemStyle: dataStyle,
+    		data: [{
+    			value: 50,
+    			name: '05'
+    		}, {
+    			value: 50,
+    			name: 'invisible',
+    			tooltip: {show: false},
+    			itemStyle: placeHolderStyle
+    		}]
+    	}, ]
+    };
 
         // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
@@ -812,7 +1020,7 @@ option = {
             myChart.resize();
         });
     }
-function echarts_31() {
+function echarts_31(res) {
     // 基于准备好的dom，初始化echarts实例
     var myChart = echarts.init(document.getElementById('fb1'));
     option = {
@@ -837,7 +1045,7 @@ function echarts_31() {
         top:'70%',
                itemWidth: 10,
                 itemHeight: 10,
-                data:['0岁以下','20-29岁','30-39岁','40-49岁','50岁以上'],
+                data:[res[0].name,res[1].name],
                         textStyle: {
                     color: 'rgba(255,255,255,.5)',
         			fontSize:'12',
@@ -852,28 +1060,21 @@ function echarts_31() {
                           color: ['#065aab', '#066eab', '#0682ab', '#0696ab', '#06a0ab','#06b4ab','#06c8ab','#06dcab','#06f0ab'],
                     label: {show:false},
         			labelLine: {show:false},
-                    data:[
-                        {value:1, name:'0岁以下'},
-                        {value:4, name:'20-29岁'},
-                        {value:2, name:'30-39岁'},
-                        {value:2, name:'40-49岁'},
-                        {value:1, name:'50岁以上'},
-                    ]
+                    data:res
                 }
             ]
         };
 
-        // 使用刚指定的配置项和数据显示图表。
-        myChart.setOption(option);
-        window.addEventListener("resize",function(){
-            myChart.resize();
-        });
+    // 使用刚指定的配置项和数据显示图表。
+    myChart.setOption(option);
+    window.addEventListener("resize",function(){
+        myChart.resize();
+    });
 }
-function echarts_32() {
-        // 基于准备好的dom，初始化echarts实例
-        var myChart = echarts.init(document.getElementById('fb2'));
-option = {
-
+function echarts_32(res) {
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('fb2'));
+    option = {
 	    title: [{
         text: '贴片车间',
         left: 'center',
@@ -882,110 +1083,95 @@ option = {
 			fontSize:'16'
         }
 
-    }],
-    tooltip: {
-        trigger: 'item',
-        formatter: "{a} <br/>{b}: {c} ({d}%)",
-position:function(p){   //其中p为当前鼠标的位置
-            return [p[0] + 10, p[1] - 10];
-        }
-    },
-    legend: {
+        }],
+        tooltip: {
+            trigger: 'item',
+            formatter: "{a} <br/>{b}: {c} ({d}%)",
+            position:function(p){   //其中p为当前鼠标的位置
+                return [p[0] + 10, p[1] - 10];
+            }
+        },
+        legend: {
 
-    top:'70%',
-       itemWidth: 10,
-        itemHeight: 10,
-        data:['电子商务','教育','IT/互联网','金融','学生','其他'],
-                textStyle: {
-           color: 'rgba(255,255,255,.5)',
-			fontSize:'12',
-        }
-    },
-    series: [
-        {
-        	name:'贴片车间',
-            type:'pie',
-			center: ['50%', '42%'],
-            radius: ['40%', '60%'],
-            color: ['#065aab', '#066eab', '#0682ab', '#0696ab', '#06a0ab','#06b4ab','#06c8ab','#06dcab','#06f0ab'],
-            label: {show:false},
-			labelLine: {show:false},
-            data:[
-                {value:5, name:'电子商务'},
-                {value:1, name:'教育'},
-                {value:6, name:'IT/互联网'},
-                {value:2, name:'金融'},
-                {value:1, name:'学生'},
-                {value:1, name:'其他'},
-            ]
-        }
-    ]
-};
+        top:'70%',
+            itemWidth: 10,
+            itemHeight: 10,
+            data:[res[0].name,res[1].name],
+                    textStyle: {
+               color: 'rgba(255,255,255,.5)',
+    			fontSize:'12',
+            }
+        },
+        series: [
+            {
+            	name:'贴片车间',
+                type:'pie',
+    			center: ['50%', '42%'],
+                radius: ['40%', '60%'],
+                color: ['#065aab', '#066eab', '#0682ab', '#0696ab', '#06a0ab','#06b4ab','#06c8ab','#06dcab','#06f0ab'],
+                label: {show:false},
+    			labelLine: {show:false},
+                data:res
+            }
+        ]
+    };
 
-        // 使用刚指定的配置项和数据显示图表。
-        myChart.setOption(option);
-        window.addEventListener("resize",function(){
-            myChart.resize();
-        });
-    }
-function echarts_33() {
-        // 基于准备好的dom，初始化echarts实例
-        var myChart = echarts.init(document.getElementById('fb3'));
-option = {
-	    title: [{
-        text: '电机车间',
-        left: 'center',
-        textStyle: {
-            color: '#fff',
-			fontSize:'16'
-        }
+    // 使用刚指定的配置项和数据显示图表。
+    myChart.setOption(option);
+    window.addEventListener("resize",function(){
+        myChart.resize();
+    });
+}
+function echarts_33(res) {
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('fb3'));
+    option = {
+    	    title: [{
+            text: '电机车间',
+            left: 'center',
+            textStyle: {
+                color: '#fff',
+    			fontSize:'16'
+            }
 
-    }],
-    tooltip: {
-        trigger: 'item',
-        formatter: "{a} <br/>{b}: {c} ({d}%)",
-position:function(p){   //其中p为当前鼠标的位置
-            return [p[0] + 10, p[1] - 10];
-        }
-    },
-    legend: {
-    top:'70%',
-       itemWidth: 10,
-        itemHeight: 10,
-        data:['汽车','旅游','财经','教育','软件','其他'],
-                textStyle: {
-            color: 'rgba(255,255,255,.5)',
-			fontSize:'12',
-        }
-    },
-    series: [
-        {
-        	name:'电机车间',
-            type:'pie',
-			center: ['50%', '42%'],
-            radius: ['40%', '60%'],
-                   color: ['#065aab', '#066eab', '#0682ab', '#0696ab', '#06a0ab','#06b4ab','#06c8ab','#06dcab','#06f0ab'],
-            label: {show:false},
-			labelLine: {show:false},
-            data:[
-                {value:2, name:'汽车'},
-                {value:3, name:'旅游'},
-                {value:1, name:'财经'},
-                {value:4, name:'教育'},
-                {value:8, name:'软件'},
-                {value:1, name:'其他'},
-            ]
-        }
-    ]
-};
+        }],
+        tooltip: {
+            trigger: 'item',
+            formatter: "{a} <br/>{b}: {c} ({d}%)",
+            position:function(p){   //其中p为当前鼠标的位置
+                return [p[0] + 10, p[1] - 10];
+            }
+        },
+        legend: {
+        top:'70%',
+           itemWidth: 10,
+            itemHeight: 10,
+            data:[res[0].name,res[1].name],
+                    textStyle: {
+                color: 'rgba(255,255,255,.5)',
+    			fontSize:'12',
+            }
+        },
+        series: [
+            {
+            	name:'电机车间',
+                type:'pie',
+    			center: ['50%', '42%'],
+                radius: ['40%', '60%'],
+                       color: ['#065aab', '#066eab', '#0682ab', '#0696ab', '#06a0ab','#06b4ab','#06c8ab','#06dcab','#06f0ab'],
+                label: {show:false},
+    			labelLine: {show:false},
+                data:res
+            }
+        ]
+    };
 
-        // 使用刚指定的配置项和数据显示图表。
-        myChart.setOption(option);
-        window.addEventListener("resize",function(){
-            myChart.resize();
-        });
-    }
-
+    // 使用刚指定的配置项和数据显示图表。
+    myChart.setOption(option);
+    window.addEventListener("resize",function(){
+        myChart.resize();
+    });
+}
 
 function progress_bar(res){
     var myChart = echarts.init(document.getElementById('echart7'));
@@ -993,7 +1179,7 @@ function progress_bar(res){
     // 指定图表的配置项和数据
     option = {
         title: {
-            text: '设备使用频率',
+            text: '设备/软件正常使用时间占比',
             x: 'center',
             textStyle: {
                 color: '#FFF'
@@ -1101,5 +1287,4 @@ function progress_bar(res){
 }
 
 
-
-
+});

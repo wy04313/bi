@@ -2,10 +2,20 @@
 date_default_timezone_set('Asia/Shanghai');
 
 
+echo (int)(.0000000000);die;
 
+print_r(get_weeks('Ymd'));
 
+function get_weeks($format='Y-m-d'){
+    $time = time();
+    $date = [];
+    for ($i=0; $i<7; $i++){
+    $date[$i] = date($format ,strtotime( '+' . $i-7 .' days', $time));
 
-
+    }
+    return $date;
+}
+die;
 $a = [];
 
 $a = array_merge($a, ['1','2',3]);

@@ -50,7 +50,7 @@ class Hrm implements TaskInterface
             3307 电机总装
 
             00301   D003_ASS    6   电控总装
-            00302   D003_EM 4   电机总装
+            00302   D003_EM 4       电机总装
             00304   D003_SMT    5   电控贴片
          */
         $date = date('Y-m-d 05:00:00');
@@ -58,7 +58,7 @@ class Hrm implements TaskInterface
             SELECT m.depart_id,count(*) sl from (
             SELECT DISTINCT(e.emp_fname),e.depart_id from PassTime p
             left join Employee e on p.emp_id = e.emp_id
-            WHERE e.depart_id in(00301,00302,00304) and p.passTime > '{$date}') m GROUP BY m.depart_id
+            WHERE e.depart_id in('00301','00302','00304') and p.passTime > '{$date}') m GROUP BY m.depart_id
             ");
         $data = [];
         if($arrive) {
@@ -85,7 +85,8 @@ class Hrm implements TaskInterface
             $server = ServerManager::getInstance()->getSwooleServer();
             // 人员打开推送
             foreach ($users as $v) {
-                $server->push($v['fd'], $this->writeToJson(Mysql::getInstance()->getLinePageData($v['page_name'],'block_data')));
+                // $server->push($v['fd'], $this->writeToJson(Mysql::getInstance()->getLinePageData($v['page_name'],'block_data')));
+                $server->push($v['fd'], $this->writeToJson($pushData,'block_data'));
             }
         }
     }

@@ -6,6 +6,10 @@
 <script src="js/jquery-1.8.3.min.js"></script>
 <link rel="stylesheet" href="css/comon0.css">
 <style type="text/css">
+body{
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
   .main_title{
       width: 220px;
       height: 40px;
@@ -92,19 +96,24 @@
   .text01_div p:nth-child(2){
       font-size: 28px;color: #ffff43;font-weight: 600;
   }
+
+
+
+
+
 .tablebox {
-    height: 330px;
+    height: 300px;
     overflow: hidden;
-    top: 48%;position:absolute;
+    top: 38%;position:absolute;
     width: 100%;
-    margin: 0px auto;
+    margin: 100px auto;
 
 }
 
 .tbl-header {
     width: 100%;
     position: absolute;
-    top: 285px;
+    top: -20px;
     left: 0;
 }
 
@@ -114,11 +123,18 @@
     top: 0;
     left: 0;
 }
+/*.tablebox table {
+    top: 33%;position:absolute;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+}*/
+
 .tablebox table th,
 .tablebox table td {
-    font-size: 16px;
+    font-size: 14px;
     color: #7ca6f4;
-    line-height: 30px;
+    line-height: 25px;
     text-align: center;
 }
 
@@ -137,24 +153,20 @@
       10px 0px 15px #2C58A6 inset;  /*右边阴影*/
 }
 
+/*
+  .barbox tbody tr:nth-child(1),
+  .barbox tbody tr:nth-child(3),
+  .barbox tbody tr:nth-child(5),
+  .barbox tbody tr:nth-child(7),
+  .barbox tbody tr:nth-child(9){
+      background-color: #072951;
+      box-shadow:-10px 0px 15px #2C58A6 inset,
+      10px 0px 15px #2C58A6 inset;
+  }*/
+
 .tablebox table tr td span,
 .tablebox table tr td span {
     font-size: 24px;
-}
-.cf1{
-    color: #FF0000;
-    font-size: 14px;
-    /*background: #c20000;*/
-}
-.cf2{
-    color: #FF6600;
-    font-size: 14px;
-    /*background: #ee880c;*/
-}
-.cf3{
-    color: #FFF;
-    font-size: 14px;
-    /*background: #f8f400;*/
 }
 
 
@@ -229,14 +241,14 @@
       <div class="bar">
         <div class="barbox2">
           <ul class="clearfix">
-            <li class="pulll_left">成品入库总量 </li>
-            <li class="pulll_left" id="total_in_year_title"></li>
+            <li class="pulll_left">2021年成品入库总量 </li>
+            <li class="pulll_left">2021年出货总量</li>
           </ul>
         </div>
         <div class="barbox">
           <ul class="clearfix">
-            <li class="pulll_left counter" id="total_in_all">0</li>
-            <li class="pulll_left counter" id="total_in_year">0</li>
+            <li class="pulll_left counter">3450</li>
+            <li class="pulll_left counter">330</li>
           </ul>
         </div>
 
@@ -244,15 +256,15 @@
             <div class="con_div_text01 left">
                 <img src="images/info_1.png" class="text01_img"/>
                 <div class="left text01_div">
-                    <p>今日入库(pcs)</p>
-                    <p id="total_in_today">0</p>
+                    <p>今日下线(pcs)</p>
+                    <p>1235</p>
                 </div>
             </div>
             <div class="con_div_text01 left">
                 <img src="images/info_11.png" class="text01_img"/>
                 <div class="left text01_div">
                     <p>今日测试不良(次)</p>
-                    <p id="total_b3">0</p>
+                    <p>1235</p>
                 </div>
             </div>
 
@@ -260,15 +272,15 @@
                 <img src="images/info_10.png" class="text01_img"/>
                 <div class="left text01_div">
                     <p>应到人数(人)</p>
-                    <p id="total_b0">0</p>
+                    <p>235</p>
                 </div>
             </div>
 
             <div class="con_div_text01 left">
                 <img src="images/info_6.png" class="text01_img"/>
                 <div class="left text01_div">
-                    <p>未到(人)</p>
-                    <p id="total_b1">0</p>
+                    <p>请假人数(人)</p>
+                    <p>235</p>
                 </div>
             </div>
 
@@ -283,60 +295,62 @@
 
             <div class="main_title">
             <img src="images/t_4.png" alt="">
-                缺料实时推送
+                实时推送
             </div>
-                <div class="tbl-header">
-                    <table border="0" cellspacing="0" cellpadding="0">
-                        <colgroup>
-                            <col width="90">
-                            <col width="160">
-                            <col width="100">
-                            <col width="100">
-                            <col width="100">
-                            <col>
-                        </colgroup>
-                        <thead>
-                            <tr>
-                                <th>序</th>
-                                <th>料号</th>
-                                <th>需求用量</th>
-                                <th>实际库存</th>
-                                <th>缺料</th>
-                                <th>数量级别</th>
-                            </tr>
-                        </thead>
-                        <tbody style="opacity:0;"></tbody>
-                    </table>
+
+
+                  <div class="tablebox" >
+
+
+                        <table border="0" cellspacing="0" cellpadding="0">
+                            <thead>
+                                <tr>
+                                    <th>排名</th>
+                                    <th>料号</th>
+                                    <th>需求用量</th>
+                                    <th>实际库存</th>
+                                    <th>缺料</th>
+                                    <th>数量级别</th>
+                                </tr>
+                            </thead>
+                            <!-- <tbody style="opacity:0;"></tbody> -->
+                        </table>
+
+                    <div class="tbl-body" style="z-index: 999;">
+                        <table border="0" cellspacing="0" cellpadding="0">
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="tablebox" >
-                    <colgroup>
-                        <col width="90">
-                        <col width="160">
-                        <col width="100">
-                        <col width="100">
-                        <col width="100">
-                        <col>
-                    </colgroup>
-                    <table border="0" cellspacing="0" cellpadding="0" class="tbl-body">
-                        <tbody id="roll"></tbody>
-                    </table>
 
-                </div>
+
+
+
+
+
+
+
+
             </div>
           </div>
         </div>
+
+
+
+
+
       </div>
     </li>
     <li>
       <div class="boxall" style="height:3.4rem">
-        <div class="alltitle">未完工生产订单抽取</div>
+        <div class="alltitle">未完工生产订单趋势图放到左下三图</div>
         <div class="allnav" id="echart4"></div>
         <div class="boxfoot"></div>
       </div>
 
       <div class="boxall" style="height: 3.2rem">
-        <div class="alltitle">近7日入库</div>
+        <div class="alltitle">近7月出货图</div>
         <div class="allnav" id="echart5"></div>
         <div class="boxfoot"></div>
       </div>
@@ -350,6 +364,76 @@
 </div>
 <!-- <div class="back"></div> -->
   <script type="text/javascript" src="js/echarts.min.js"></script>
+  <!-- <script src="js/scroll.js"></script> -->
+
+
+<script type="text/javascript">
+
+var MyMarhq = '';
+clearInterval(MyMarhq);
+$('.tbl-body tbody').empty();
+$('.tbl-header tbody').empty();
+var str = '';
+var Items = [{"Ranking":"1","City":"保定","SaleIncome":"2506734.43","SaleRough":"296071.96","SalePlan":"7200000","PlanFinish":"34.82","TonOilincome":"264.15","OilTransform":"29.62","An":"53.00","Mom":"-13.00"},
+    {"Ranking":"2","City":"沧州","SaleIncome":"1425935.58","SaleRough":"93717.83","SalePlan":"3200000","PlanFinish":"44.56","TonOilincome":"366.59","OilTransform":"11.23","An":"65.00","Mom":"43.00"},
+    {"Ranking":"3","City":"秦皇岛","SaleIncome":"1372207.38","SaleRough":"241071.82","SalePlan":"3000000","PlanFinish":"45.74","TonOilincome":"342.32","OilTransform":"6.61","An":"34.00","Mom":"7.00"},
+    {"Ranking":"4","City":"衡水","SaleIncome":"972451.15","SaleRough":"87638.60","SalePlan":"2700000","PlanFinish":"36.02","TonOilincome":"246.03","OilTransform":"11.56","An":"15.00","Mom":"-18.00"},
+    {"Ranking":"5","City":"石家庄","SaleIncome":"939010.52","SaleRough":"140217.37","SalePlan":"7200000","PlanFinish":"13.04","TonOilincome":"139.44","OilTransform":"19.23","An":"-57.00","Mom":"-48.00"},
+    {"Ranking":"6","City":"邢台","SaleIncome":"774274.70","SaleRough":"124693.90","SalePlan":"3700000","PlanFinish":"20.93","TonOilincome":"138.87","OilTransform":"9.44","An":"-20.00","Mom":"-44.00"},
+    {"Ranking":"7","City":"唐山","SaleIncome":"680456.79","SaleRough":"50542.14","SalePlan":"3600000","PlanFinish":"18.90","TonOilincome":"243.60","OilTransform":"16.95","An":"-29.00","Mom":"-49.00"},
+    {"Ranking":"8","City":"张家口","SaleIncome":"613319.87","SaleRough":"176075.96","SalePlan":"3000000","PlanFinish":"20.44","TonOilincome":"87.09","OilTransform":"7.97","An":"2.00","Mom":"-24.00"},
+    {"Ranking":"9","City":"中油华奥","SaleIncome":"596575.25","SaleRough":"387024.26","SalePlan":"11000000","PlanFinish":"5.42","TonOilincome":"93.58","OilTransform":"19.06","An":"35.00","Mom":"6.00"},
+    {"Ranking":"10","City":"承德","SaleIncome":"589048.12","SaleRough":"68966.73","SalePlan":"2200000","PlanFinish":"26.77","TonOilincome":"193.24","OilTransform":"11.29","An":"30.00","Mom":"-28.00"},
+    {"Ranking":"11","City":"廊坊","SaleIncome":"515448.14","SaleRough":"137934.72","SalePlan":"3500000","PlanFinish":"14.73","TonOilincome":"95.47","OilTransform":"8.80","An":"-48.00","Mom":"-3.00"},
+    {"Ranking":"12","City":"瑞州","SaleIncome":"399875.26","SaleRough":"85371.46","SalePlan":"2000000","PlanFinish":"19.99","TonOilincome":"114.42","OilTransform":"11.42","An":"128.00","Mom":"-30.00"},
+    {"Ranking":"13","City":"石家庄中油","SaleIncome":"90543.62","SaleRough":"20065.14","SalePlan":"430000","PlanFinish":"21.06","TonOilincome":"213.44","OilTransform":"20.45","An":"-24.00","Mom":"-17.00"},
+    {"Ranking":"14","City":"辛集中油","SaleIncome":"49255.52","SaleRough":"8743.12","SalePlan":"250000","PlanFinish":"19.70","TonOilincome":"202.67","OilTransform":"29.95","An":"19.00","Mom":"-6.00"},
+    {"Ranking":"15","City":"井陉中油","SaleIncome":"29682.60","SaleRough":"2175.66","SalePlan":"140000","PlanFinish":"21.20","TonOilincome":"730.20","OilTransform":"25.55","An":"-74.00","Mom":"-52.00"},
+    {"Ranking":"16","City":"保定中油","SaleIncome":"11887.73","SaleRough":"2944.97","SalePlan":"100000","PlanFinish":"11.89","TonOilincome":"118.12","OilTransform":"34.16","An":"-64.00","Mom":"-72.00"}]
+$.each(Items,function (i, item) {
+    str = '<tr>'+
+        '<td>'+item.Ranking+'</td>'+
+        '<td>'+item.City+'</td>'+
+        '<td>'+(+item.SaleIncome/10000).toFixed(2)+'</td>'+
+        '<td>'+(+item.An).toFixed(2)+'</td>'+
+        '<td>'+(+item.Mom).toFixed(2)+'</td>'+
+        '<td>'+(item.SalePlan/10000).toFixed(2)+'</td>'+
+        '</tr>'
+
+    $('.tbl-body tbody').append(str);
+    $('.tbl-header tbody').append(str);
+});
+
+if(Items.length > 10){
+    $('.tbl-body tbody').html($('.tbl-body tbody').html()+$('.tbl-body tbody').html());
+    $('.tbl-body').css('top', '0');
+    var tblTop = 0;
+    var speedhq = 50; // 数值越大越慢
+    var outerHeight = $('.tbl-body tbody').find("tr").outerHeight();
+    function Marqueehq(){
+        if(tblTop <= -outerHeight*Items.length){
+            tblTop = 0;
+        } else {
+            tblTop -= 1;
+        }
+        $('.tbl-body').css('top', tblTop+'px');
+    }
+
+    MyMarhq = setInterval(Marqueehq,speedhq);
+
+    // 鼠标移上去取消事件
+    $(".tbl-header tbody").hover(function (){
+        clearInterval(MyMarhq);
+    },function (){
+        clearInterval(MyMarhq);
+        MyMarhq = setInterval(Marqueehq,speedhq);
+    })
+
+}
+
+</script>
+
+
   <script language="JavaScript" src="js/total.js"></script>
 </body>
 </html>

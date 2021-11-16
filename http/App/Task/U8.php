@@ -30,11 +30,14 @@ class U8 implements TaskInterface
         $dept = [
             '3302' => ['MoCode' => [],'InvCode' => [], 'expQty' => 0, 'inQty' => 0],
             '3305' => ['MoCode' => [],'InvCode' => [], 'expQty' => 0, 'inQty' => 0],
-            '3306' => ['MoCode' => [],'InvCode' => [], 'expQty' => 0, 'inQty' => 0],
+            // '3306' => ['MoCode' => [],'InvCode' => [], 'expQty' => 0, 'inQty' => 0],
             '3307' => ['MoCode' => [],'InvCode' => [], 'expQty' => 0, 'inQty' => 0],
         ];
+        // 合并3306和3307为3307
         $data = $this->getAllFromU8("
-                select o.MoCode,d.InvCode,d.Qty expQty,d.QualifiedInQty inQty,d.MDeptCode from mom_orderdetail d
+                select o.MoCode,d.InvCode,d.Qty expQty,d.QualifiedInQty inQty,
+                CASE when d.MDeptCode = '3306' then 3307
+                ELSE d.MDeptCode END as MDeptCode from mom_orderdetail d
                 left join mom_order o on d.MoId = o.MoId
                 WHERE d.status = 3
                 and o.mocode not like '%MRP%'
@@ -93,7 +96,8 @@ class U8 implements TaskInterface
         ");
 
         if($rollList) {
-            foreach($rollList as &$v) {
+            foreach($rollList as $k => &$v) {
+                $v['id'] = $k + 1;
                 $v['reqQty'] = round($v['reqQty'],2);
                 $v['isQue'] = round($v['isQue'],2);
                 $v['qty'] = (int)$v['qty'];

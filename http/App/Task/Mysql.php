@@ -17,15 +17,199 @@ class Mysql
         switch ($page_name) {
             case 'line3302':# line数据至页面
             case 'line3305':
-            case 'line3306':
+            // case 'line3306':
             case 'line3307':
                 return $this->getLinePageData($page_name);
             case 'total':
-                return '3';
+                return $this->getTotalPageData($page_name);
         }
     }
 
-    private function defineSubData(){
+    // total 页面数据
+    public function getTotalPageData($page_name,$sub = null){
+        $subData = $sub === null ? $this->definetotalSubData() : explode(',', $sub);
+        $field = []; //待取字段
+        if(in_array('dashboard', $subData))
+            $field = array_merge($field, ['total_wd','total_sd', 'total_yield_rate','total_power']);
+        if(in_array('less_material', $subData)) $field[] = 'less_material';
+        if(in_array('watt_meter_weeks', $subData))
+            $field = array_merge($field, ['weeks','watt_meter_weeks']);
+        if(in_array('equ_used', $subData))
+            $field = array_merge($field, ['total_equ_used_name','total_equ_used_value']);
+        if(in_array('block_data', $subData))
+            $field = array_merge($field, [
+                'line_3302_block_b0','line_3302_block_b1','line_3302_block_b3',
+                'line_3305_block_b0','line_3305_block_b1','line_3305_block_b3',
+                // 'line_3306_block_b0','line_3306_block_b1','line_3306_block_b3',
+                'line_3307_block_b0','line_3307_block_b1','line_3307_block_b3',
+                'total_in_year','total_in_year_title','total_in_all'
+                ]);
+
+        if(in_array('unover', $subData))
+            $field = array_merge($field, [
+                    'line_3302_today_task',
+                    'line_3305_today_task',
+                    // 'line_3306_today_task',
+                    'line_3307_today_task'
+                ]); //未完工订单
+
+        $redis = \EasySwoole\Pool\Manager::getInstance()->get('redis')->getObj();
+        $redis->select(15);
+        // $field = array_unique($field);
+        $redisData = $redis->mGet($field);
+
+        $tmp = [];
+        foreach ($field as $k => $v) {
+            $tmp[$v] = $redisData[$k];
+        }
+
+        if(in_array('dashboard', $subData))
+            $data['dashboard'] = [
+                'yield_rate' => $tmp['total_yield_rate'], //良品率
+                'wd' => $tmp['total_wd'], //温度
+                'sd' => $tmp['total_sd'], //湿度
+                'power' => $redis->LINDEX('watt_meter_weeks', 0), //电表度数
+            ];
+        if(in_array('less_material', $subData))
+            $data['roll'] = json_decode($tmp['less_material'], true);
+        // 7日电表
+        if(in_array('watt_meter_weeks', $subData)) {
+            $data['watt_meter_weeks']['x'] = $this->fmtWeeks($redis->lrange('weeks', 0, 6));
+            $data['watt_meter_weeks']['y'] = $this->fmtWattMeter($redis->lrange('watt_meter_weeks', 0, 7));
+        }
+
+        // 7日入库记录
+        if(in_array('total_in_todays', $subData)) {
+            $data['total_in_todays']['x'] = $this->fmtWeeks($redis->lrange('weeks', 0, 6));
+            $data['total_in_todays']['y'] = $redis->lrange('total_in_todays', 0, 6);
+        }
+
+        // 应到,实到人数和3个圆形图
+        if(in_array('block_data', $subData)) {
+            $allUser = array_sum([
+                $tmp['line_3302_block_b0'],
+                $tmp['line_3305_block_b0'],
+                $tmp['line_3307_block_b0']
+            ]);//应到人数
+            // 应到,实到
+            $data['p3302'] = [
+                ['name' => '总'.$tmp['line_3302_block_b0'].'人', 'value' => (int)$tmp['line_3302_block_b0']],
+                ['name' => '实到'.$tmp['line_3302_block_b1'].'人', 'value' => (int)$tmp['line_3302_block_b1']],
+            ];
+            $data['p3305'] = [
+                ['name' => '总'.$tmp['line_3305_block_b0'].'人', 'value' => (int)$tmp['line_3305_block_b0']],
+                ['name' => '实到'.$tmp['line_3305_block_b1'].'人', 'value' => (int)$tmp['line_3305_block_b1']],
+            ];
+            $data['p3307'] = [
+                ['name' => '总'.$tmp['line_3307_block_b0'].'人', 'value' => (int)$tmp['line_3307_block_b0']],
+                ['name' => '实到'.$tmp['line_3307_block_b1'].'人', 'value' => (int)$tmp['line_3307_block_b1']],
+            ];
+
+            $data['block_data']['total_b0'] = $allUser;
+            $data['block_data']['total_b1'] = $allUser - array_sum([
+                $tmp['line_3302_block_b1'],
+                $tmp['line_3305_block_b1'],
+                $tmp['line_3307_block_b1']
+            ]);//实到到人数
+
+            $data['block_data']['total_b3'] = array_sum([
+                $tmp['line_3302_block_b3'],
+                $tmp['line_3305_block_b3'],
+                $tmp['line_3307_block_b3']
+            ]);//不良警报
+
+            $data['block_data']['total_in_today'] = $redis->LINDEX('total_in_todays', 0);
+             //今日入库总计 total_in_todays
+            $data['block_data']['total_in_year'] = $tmp['total_in_year']; //今年入库总计
+            $data['block_data']['total_in_year_title'] = $tmp['total_in_year_title']; //今年入库总计标题
+            $data['block_data']['total_in_all'] = $tmp['total_in_all']; //入库总计
+        }
+
+        // 设备软件正常使用时间占比
+        if(in_array('equ_used', $subData)) {
+            $data['equ_used']['name'] = explode(',',$tmp['total_equ_used_name']);
+            $data['equ_used']['value'] = explode(',', $tmp['total_equ_used_value']);
+        }
+
+        // 未完工订单
+        if(in_array('unover', $subData)) {
+            $t3302 = json_decode($tmp['line_3302_today_task'], true);
+            $t3302 = $this->fmtOrder($t3302['MoCode']);
+            $t3305 = json_decode($tmp['line_3305_today_task'], true);
+            $t3305 = $this->fmtOrder($t3305['MoCode']);
+            $t3307 = json_decode($tmp['line_3307_today_task'], true);
+            $t3307 = $this->fmtOrder($t3307['MoCode']);
+            $data['unover']['name'] = array_slice(array_merge($t3302['name'],$t3305['name'],$t3307['name']), 0, 20);
+            $data['unover']['v1'] = array_slice(array_merge($t3302['v1'],$t3305['v1'],$t3307['v1']),0,20);
+            $data['unover']['v2'] = array_slice(array_merge($t3302['v2'],$t3305['v2'],$t3307['v2']),0,20);
+
+        }
+
+        \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
+
+        return $data;
+    }
+
+    /* 整理各部门订单汇总
+        [0] => Array
+            (
+                [order] => 102SC2111068
+                [over] => 0
+                [unover] => 65
+            )
+
+        [1] => Array
+            (
+                [order] => 102SC2111063
+                [over] => 0
+                [unover] => 52
+            )
+
+     */
+    private function fmtOrder($data){
+        $name = [];
+        $v1 = []; //预计
+        $v2 = []; // 未完工
+        foreach ($data as $v) {
+            $name[] = $v['order'];
+            $v1[] = $v['over'] + $v['unover'];
+            $v2[] = $v['over'];
+        }
+        return compact('name','v1','v2');
+    }
+
+    private function definetotalSubData(){
+        return [
+            'dashboard', // 仪表盘数据
+            'less_material', // 物料缺失的滚动数据
+            'watt_meter_weeks', // 近七日用电量
+            'block_data', // 卡片数据
+            'total_in_todays', // 近7日入库统计
+            'equ_used', // 设备使用率
+            'unover', // 未完工订单
+        ];
+    }
+
+    // 格式换年月日
+    private function fmtWeeks($data){
+        foreach ($data as &$v) {
+            $v = date('m/d', strtotime($v));
+        }
+        return $data;
+    }
+
+    // 作差,7天的值,不足补全
+    private function fmtWattMeter($data){
+        $tmp = [];
+        foreach ($data as $k => $v) {
+            if($k < 7) {
+                $tmp[] = round($v - $data[$k + 1], 2);
+            }
+        }
+        return $tmp;
+    }
+
+    private function defineLineSubData(){
         return [
             'block_data', //顶部6个块元素
             'today_task', //今日任务
@@ -44,7 +228,7 @@ class Mysql
     public function getLinePageData($page_name,$sub = null){
         preg_match('/^line(\d{4})$/', $page_name, $cost_type);
         $cost_type = $cost_type[1];
-        $subData = $sub === null ? $this->defineSubData() : explode(',', $sub);
+        $subData = $sub === null ? $this->defineLineSubData() : explode(',', $sub);
         $redis = \EasySwoole\Pool\Manager::getInstance()->get('redis')->getObj();
         $redis->select(15);
         $field = []; //待取字段

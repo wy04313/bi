@@ -86,6 +86,7 @@ class Index extends Base
     // 心跳
     function heartbeat()
     {
+        // echo date('Y/m/d H:i:s').PHP_EOL;
         $fd = $this->caller()->getClient()->getFd();
         OnlineUser::getInstance()->update($fd);
         $this->response()->setMessage('PONG');

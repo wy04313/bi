@@ -38,13 +38,17 @@ class EasySwooleEvent implements Event
             DbManager::getInstance()->addConnection(new Connection($m1),'mes');
             DbManager::getInstance()->addConnection(new Connection($m2),'wms');
         }catch (Exception $e){
-
+            echo 'msyql fuck';
         }
 
-        // redis连接池
-        $config = new \EasySwoole\Pool\Config();
-        $redisConfig = new \EasySwoole\Redis\Config\RedisConfig(Config::getInstance()->getConf('REDIS'));
-        \EasySwoole\Pool\Manager::getInstance()->register(new \App\Pool\RedisPool($config,$redisConfig),'redis');
+        try{
+            // redis连接池
+            $config = new \EasySwoole\Pool\Config();
+            $redisConfig = new \EasySwoole\Redis\Config\RedisConfig(Config::getInstance()->getConf('REDIS'));
+            \EasySwoole\Pool\Manager::getInstance()->register(new \App\Pool\RedisPool($config,$redisConfig),'redis');
+        }catch (Exception $e){
+            echo 'redis连接池 fuck';
+        }
 
     }
 

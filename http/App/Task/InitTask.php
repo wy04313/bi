@@ -27,7 +27,7 @@ class InitTask extends AbstractCronTask
             return true;
         });
 
-        $dept = [3302,3305,3306,3307];
+        $dept = [3302,3305,3307];
 
         // 部门人数统计
         $sql = "
@@ -49,8 +49,8 @@ class InitTask extends AbstractCronTask
         foreach ($dept as $v) {
             foreach ($deptUsers as $v1) {
                 if($v == $v1['cost_type']) {
-                    $data["line_'.$v.'_block_b1"] = $v1['sl']; // 部门实到人数
-                    $data["line_'.$v.'_block_b1_last_updated"] = date('m/d H:i');
+                    $data["line_{$v}_block_b1"] = $v1['sl']; // 部门实到人数
+                    $data["line_{$v}_block_b1_last_updated"] = date('m/d H:i');
                 }
             }
             $data['line_'.$v.'_block_b6'] = 0; //今日不良品清空
@@ -58,13 +58,23 @@ class InitTask extends AbstractCronTask
 
             $data['line_'.$v.'_block_b3'] = 0; //今日警报
             $data['line_'.$v.'_block_b3_last_updated'] = date('m/d H:i');
-
         }
         $data['user_total'] = array_sum(array_column($data, 'sl'));
 
         $redis = \EasySwoole\Pool\Manager::getInstance()->get('redis')->getObj();
         $redis->select(15);
         $redis->mSet($data);
+
+        // 电表统计,将昨天最后一次抄表写入,
+        $today = date('Ymd');
+        $redis->LPUSH('weeks', $today);
+        $redis->LPUSH('watt_meter_weeks', $redis->LINDEX('watt_meter_weeks', 0)); //今日电表默认值取昨天最后一次
+        $redis->LPUSH('total_in_todays', $redis->LINDEX('total_in_todays', 0)); //今日入库默认0
+
+        $redis->LTRIM('weeks',0,6);
+        $redis->LTRIM('watt_meter_weeks',0,7); //需要作差,多留一天
+        $redis->LTRIM('total_in_todays',0,6); //7天
+
         \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
 
         // 异步任务

@@ -12,7 +12,7 @@ use App\Model\WMesStationModel;
 
 use EasySwoole\EasySwoole\ServerManager;
 use App\Task\OnlineUser;
-// use App\Task\Mysql;
+use App\Task\Mysql;
 
 class MinuteTask implements TaskInterface
 {
@@ -29,7 +29,60 @@ class MinuteTask implements TaskInterface
         go(function (){
             $this->getNowLine(3307);
         });
+
+        go(function (){
+            $this->getTotalIn();
+        });
     }
+
+    // 入库总计 // SELECT ISNULL(sum(s.iQuantity), 0) as today_in FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID   WHERE r.dDate > '2021-11-23 00:00:00'
+    private function getTotalIn(){
+        $today = date('Y-m-d 00:00:00');
+        $year = date('Y-01-01 00:00:00');
+        $field = 'r.dDate';
+
+        $redis = \EasySwoole\Pool\Manager::getInstance()->get('redis')->getObj();
+
+        $total_in_all = $this->getAllFromU8("SELECT sum(iQuantity) as cnt FROM rdrecords10");
+        $total_in_all = (INT)$total_in_all['cnt'];
+
+        $total_in_year = $this->getAllFromU8("
+            SELECT ISNULL(sum(s.iQuantity), 0) as cnt FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID   WHERE {$field} > '{$year}'
+            ");
+        $total_in_year = (INT)$total_in_year['cnt'];
+        $total_in_year_title = date('Y')."年度出货总量";
+
+        $total_in_today = $this->getAllFromU8("
+            SELECT ISNULL(sum(s.iQuantity), 0) as cnt FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID   WHERE {$field} > '{$today}'
+            ");
+        $total_in_today = (INT)$total_in_today['cnt'];
+        $redis->select(15);
+        $redis->lset('total_in_todays', 0, $total_in_today);
+        $redis->mSet(compact('total_in_all','total_in_year','total_in_year_title'));
+
+
+        \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
+
+        $users = OnlineUser::getInstance()->table();
+        $server = ServerManager::getInstance()->getSwooleServer();
+        foreach ($users as $v) {
+            if($v['page_name'] === 'total') {
+                $server->push($v['fd'], $this->writeToJson(Mysql::getInstance()->getTotalPageData('total','block_data'), 'ok'));
+            }
+        }
+
+    }
+
+
+    private function getAllFromU8($sql){
+        $conn = new \PDO("sqlsrv:server=10.0.6.218;database=UFDATA_102_2021","sa","abc@123");
+        $res = $conn->query($sql);
+        return $res->fetch(\PDO::FETCH_ASSOC);
+    }
+
+
+
+
 
     private function getNowLine($cost_type){
         /*

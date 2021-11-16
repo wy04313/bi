@@ -66,8 +66,8 @@ return [
         'auth'                 => 'sb_fzw',//数据库密码
         'serialize'            => \EasySwoole\Redis\Config\RedisConfig::SERIALIZE_NONE,
 
-        'POOL_MAX_NUM'  => '6',
-        'POOL_TIME_OUT' => '0.1',
+        'POOL_MAX_NUM'  => '30',
+        'POOL_TIME_OUT' => '1',
 
         'minObjectNum' => 10, // 连接池最小连接数
         'maxObjectNum' => 30, // 连接池最大连接数
