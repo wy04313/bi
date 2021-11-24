@@ -43,7 +43,7 @@ class Index extends Base
         OnlineUser::getInstance()->set($fd, (int)$created, $page_name);
 
         $data = Mysql::getInstance()->getPageData($page_name);
-        $data['title'] = $res['title'];
+        $data['title'] = $this->getPageTitleByPageName($page_name);
         $data['fd'] = $fd;
         $this->response()->setMessage($this->writeToJson(0,'OK',$data, 'ok'));
     }
@@ -65,6 +65,17 @@ class Index extends Base
         }
         return $res;
     }
+
+    private function getPageTitleByPageName($page_name){
+        $ids = [
+            'total' => '浙江创驱智能科技有限公司中控数据中心',
+            'line3302' => '浙江创驱智能科技有限公司贴片车间实况',
+            'line3305' => '浙江创驱智能科技有限公司电控车间实况',
+            'line3307' => '浙江创驱智能科技有限公司电机车间实况',
+        ];
+        return isset($ids[$page_name]) ? $ids[$page_name] : '非法未定义的页面';
+    }
+
 
     function delay()
     {
