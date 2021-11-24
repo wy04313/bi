@@ -85,7 +85,7 @@ class InitTask extends AbstractCronTask
         if($redis->LINDEX('weeks', 0) !== $today) {
             $redis->LPUSH('weeks', $today);
             $redis->LPUSH('watt_meter_weeks', $redis->LINDEX('watt_meter_weeks', 0)); //今日电表默认值取昨天最后一次
-            $redis->LPUSH('total_in_todays', $redis->LINDEX('total_in_todays', 0)); //今日入库默认0
+            $redis->LPUSH('total_in_todays', $redis->LINDEX('total_in_todays', 0, 0)); //今日入库默认0
             $redis->LTRIM('weeks',0,6);
             $redis->LTRIM('watt_meter_weeks',0,7); //需要作差,多留一天
             $redis->LTRIM('total_in_todays',0,6); //7天
