@@ -53,12 +53,17 @@ class Hrm implements TaskInterface
             00302   D003_EM 4       电机总装
             00304   D003_SMT    5   电控贴片
          */
+        $redis = \EasySwoole\Pool\Manager::getInstance()->get('redis')->getObj();
+        $redis->select(15);
+        $empCodes = $redis->get('user_total_emp_code');
+        $empCodes = $empCodes ? " and p.emp_id in ($empCodes) " : '';
+
         $date = date('Y-m-d 05:00:00');
         $arrive = $this->getAllFromHrm("
             SELECT m.depart_id,count(*) sl from (
             SELECT DISTINCT(e.emp_fname),e.depart_id from PassTime p
             left join Employee e on p.emp_id = e.emp_id
-            WHERE e.depart_id in('00301','00302','00304') and p.passTime > '{$date}') m GROUP BY m.depart_id
+            WHERE e.depart_id in('00301','00302','00304') $empCodes and p.passTime > '{$date}') m GROUP BY m.depart_id
             ");
         $data = [];
         if($arrive) {
@@ -74,12 +79,7 @@ class Hrm implements TaskInterface
                     $data["line_3302_block_b1_last_updated"] = date('m/d H:i');
                 }
             }
-            $redis = \EasySwoole\Pool\Manager::getInstance()->get('redis')->getObj();
-            $redis->select(15);
             $redis->mSet($data);
-
-            \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
-
             $pushData['block_data'] = $data;
             $users = OnlineUser::getInstance()->table();
             $server = ServerManager::getInstance()->getSwooleServer();
@@ -89,6 +89,7 @@ class Hrm implements TaskInterface
                 $server->push($v['fd'], $this->writeToJson($pushData,'block_data'));
             }
         }
+        \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
     }
 
     private function getAllFromHrm($sql){

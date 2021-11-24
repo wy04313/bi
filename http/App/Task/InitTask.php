@@ -31,35 +31,50 @@ class InitTask extends AbstractCronTask
 
         // 部门人数统计
         $sql = "
-            SELECT
-                            count(*) sl,
-                    t2.CN_U8Department cost_type
-
-            FROM
-                    AAAAC.EmployeeBasic t1
-                    INNER JOIN AAAAC.Organizational t2 ON t1.OrganizationalID= t2.OrganizationalID
-            WHERE
-                    t1.EmpStatus= 'Inservice' and t2.CN_U8Department in(".implode(',', $dept).")
-
-                        GROUP BY t2.CN_U8Department
+            SELECT t1.EmpCode,t2.CN_U8Department cost_type
+            FROM AAAAC.EmployeeBasic t1 INNER JOIN AAAAC.Organizational t2
+            ON t1.OrganizationalID= t2.OrganizationalID
+            WHERE t1.EmpStatus= 'Inservice' and t2.CN_U8Department in(3302,3305,3307)
         ";
+        /*
+        J00024  3305
+        J00025  3305
+        J00021  3305
+        J00022  3305
+        J00062  3305
+        J00085  3305
 
+        b0 应到  b1 实到
+         */
+        $yd3302 = [];
+        $yd3305 = [];
+        $yd3307 = [];
         $deptUsers = $this->getFromHrm($sql);
+        foreach ($deptUsers as $v) {
+            if($v['cost_type'] === '3302')
+                $yd3302[] = "'{$v['EmpCode']}'";
+            elseif ($v['cost_type'] === '3305')
+                $yd3305[] = "'{$v['EmpCode']}'";
+            elseif ($v['cost_type'] === '3307')
+                $yd3307[] = "'{$v['EmpCode']}'";
+        }
+
         $data = [];
         foreach ($dept as $v) {
-            foreach ($deptUsers as $v1) {
-                if($v == $v1['cost_type']) {
-                    $data["line_{$v}_block_b1"] = $v1['sl']; // 部门实到人数
-                    $data["line_{$v}_block_b1_last_updated"] = date('m/d H:i');
-                }
-            }
+            $data["line_{$v}_block_b0"] = count(${'yd'.$v});
+            $data["line_{$v}_block_b0_last_updated"] = date('m/d H:i');
+
             $data['line_'.$v.'_block_b6'] = 0; //今日不良品清空
             $data['line_'.$v.'_block_b6_last_updated'] = date('m/d H:i');
 
             $data['line_'.$v.'_block_b3'] = 0; //今日警报
             $data['line_'.$v.'_block_b3_last_updated'] = date('m/d H:i');
         }
-        $data['user_total'] = array_sum(array_column($data, 'sl'));
+
+
+        //总人数
+        $data['user_total'] = count($yd3302) + count($yd3305) + count($yd3307);
+        $data['user_total_emp_code'] = implode(',', array_merge($yd3302,$yd3305,$yd3307));
 
         $redis = \EasySwoole\Pool\Manager::getInstance()->get('redis')->getObj();
         $redis->select(15);
@@ -67,13 +82,14 @@ class InitTask extends AbstractCronTask
 
         // 电表统计,将昨天最后一次抄表写入,
         $today = date('Ymd');
-        $redis->LPUSH('weeks', $today);
-        $redis->LPUSH('watt_meter_weeks', $redis->LINDEX('watt_meter_weeks', 0)); //今日电表默认值取昨天最后一次
-        $redis->LPUSH('total_in_todays', $redis->LINDEX('total_in_todays', 0)); //今日入库默认0
-
-        $redis->LTRIM('weeks',0,6);
-        $redis->LTRIM('watt_meter_weeks',0,7); //需要作差,多留一天
-        $redis->LTRIM('total_in_todays',0,6); //7天
+        if($redis->LINDEX('weeks', 0) !== $today) {
+            $redis->LPUSH('weeks', $today);
+            $redis->LPUSH('watt_meter_weeks', $redis->LINDEX('watt_meter_weeks', 0)); //今日电表默认值取昨天最后一次
+            $redis->LPUSH('total_in_todays', $redis->LINDEX('total_in_todays', 0)); //今日入库默认0
+            $redis->LTRIM('weeks',0,6);
+            $redis->LTRIM('watt_meter_weeks',0,7); //需要作差,多留一天
+            $redis->LTRIM('total_in_todays',0,6); //7天
+        }
 
         \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
 

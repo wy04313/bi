@@ -47,13 +47,13 @@ class MinuteTask implements TaskInterface
         $total_in_all = (INT)$total_in_all['cnt'];
 
         $total_in_year = $this->getAllFromU8("
-            SELECT ISNULL(sum(s.iQuantity), 0) as cnt FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID   WHERE {$field} > '{$year}'
+            SELECT ISNULL(sum(s.iQuantity), 0) as cnt FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID WHERE {$field} > '{$year}'
             ");
         $total_in_year = (INT)$total_in_year['cnt'];
-        $total_in_year_title = date('Y')."年度出货总量";
+        $total_in_year_title = date('Y')."年度入库总量";
 
         $total_in_today = $this->getAllFromU8("
-            SELECT ISNULL(sum(s.iQuantity), 0) as cnt FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID   WHERE {$field} > '{$today}'
+            SELECT ISNULL(sum(s.iQuantity), 0) as cnt FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID WHERE {$field} = '{$today}'
             ");
         $total_in_today = (INT)$total_in_today['cnt'];
         $redis->select(15);

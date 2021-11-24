@@ -1,7 +1,13 @@
 <?php
 date_default_timezone_set('Asia/Shanghai');
 
+$a = 'J00044,J00045,J00035,J00086,J00090,J00024,J00025,J00021,J00022,J00062,J00085,J00089,J00091,J00070,J00069,J00068,J00067,J00071,J00026,J00027,J00053,J00055,J00051,J00054,J00052';
 
+$b = array_map(function($v){
+    return "'{$v}'";
+}, explode(',',$a));
+
+print_r($b);die;
 echo (int)(.0000000000);die;
 
 print_r(get_weeks('Ymd'));
