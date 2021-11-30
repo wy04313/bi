@@ -87,18 +87,19 @@ class EasySwooleEvent implements Event
         OnlineUser::getInstance(); //建表
         Crontab::getInstance()->addTask(\App\Task\InitTask::class);
 
+
         // 队列
-        // $redisConfig = new \EasySwoole\Redis\Config\RedisConfig(Config::getInstance()->getConf('MES_QUEUE'));
-        // // 配置 队列驱动器
-        // $driver = new \EasySwoole\Queue\Driver\RedisQueue($redisConfig, 'fuck_fzw');
-        // MyQueue::getInstance($driver);
-        // // 注册一个消费进程
-        // $processConfig = new \EasySwoole\Component\Process\Config([
-        //     'processName' => 'QueueProcess', // 设置 自定义进程名称
-        //     'processGroup' => 'Queue', // 设置 自定义进程组名称
-        //     'enableCoroutine' => true, // 设置 自定义进程自动开启协程
-        // ]);
-        // \EasySwoole\Component\Process\Manager::getInstance()->addProcess(new QueueProcess($processConfig));
+        $redisConfig = new \EasySwoole\Redis\Config\RedisConfig(Config::getInstance()->getConf('MES_QUEUE'));
+        // 配置 队列驱动器
+        $driver = new \EasySwoole\Queue\Driver\RedisQueue($redisConfig, 'fuck_fzw');
+        MyQueue::getInstance($driver);
+        // 注册一个消费进程
+        $processConfig = new \EasySwoole\Component\Process\Config([
+            'processName' => 'QueueProcess', // 设置 自定义进程名称
+            'processGroup' => 'Queue', // 设置 自定义进程组名称
+            'enableCoroutine' => true, // 设置 自定义进程自动开启协程
+        ]);
+        \EasySwoole\Component\Process\Manager::getInstance()->addProcess(new QueueProcess($processConfig));
 
         $register->add(EventRegister::onWorkerStart, function (\swoole_server $server, $workerId) {
             if ($workerId == 0) {
@@ -117,6 +118,7 @@ class EasySwooleEvent implements Event
                         $syncTask->async(new \App\Task\Hrm());
                     }
                 });
+
             }
         });
     }
