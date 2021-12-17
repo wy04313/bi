@@ -161,6 +161,7 @@ class Mysql
             $arr[]['x'] = $v['name'];
             $arr[]['y'] = $v['val'];
         }
+        return $arr;
     }
 
     /* 整理各部门订单汇总
