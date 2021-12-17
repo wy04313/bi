@@ -161,6 +161,7 @@ class Mysql
             $arr[]['x'] = $v['name'];
             $arr[]['y'] = $v['val'];
         }
+print_r($arr);
         return $arr;
     }
 
