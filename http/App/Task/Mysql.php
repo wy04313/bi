@@ -158,10 +158,9 @@ class Mysql
     private function fmtColumn($data){
         $arr = [];
         foreach ($data as $v) {
-            $arr[]['x'] = $v['name'];
-            $arr[]['y'] = $v['val'];
+            $arr['x'][] = $v['name'];
+            $arr['y'][] = $v['val'];
         }
-print_r($arr);
         return $arr;
     }
 
