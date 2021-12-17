@@ -57,7 +57,7 @@ class MinuteTask implements TaskInterface
             ");
 
         $redis->select(15);
-        // $redis->set('total_in_todays', json_encode($total_in_today, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $redis->set('total_in_todays', json_encode($total_in_today, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
         $redis->mSet(compact('total_in_all','total_in_year','total_in_year_title'));
 

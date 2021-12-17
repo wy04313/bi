@@ -113,7 +113,6 @@
     }
 
     function doCase(res){
-        console.log(res);
         switch(res.case) {
             case 'ok':
                 if(typeof(res.data.fd) !== 'undefined') $('#fd').html('(' + res.data.fd + ')');
