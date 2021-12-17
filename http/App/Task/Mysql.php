@@ -80,7 +80,7 @@ class Mysql
 
         //今天入库记录
         if(in_array('total_in_todays', $subData)) {
-            $data['total_in_todays'] = $this->fmtColumn(json_decode($redis->get('total_in_todays'), true));
+            $data['total_in_todays'] = json_decode($redis->get('total_in_todays'), true);
         }
 
         // 应到,实到人数和3个圆形图
@@ -154,15 +154,15 @@ class Mysql
         return $data;
     }
 
-    // 整理柱形图数据
-    private function fmtColumn($data){
-        $arr = [];
-        foreach ($data as $v) {
-            $arr['x'][] = $v['name'];
-            $arr['y'][] = $v['val'];
-        }
-        return $arr;
-    }
+    // // 整理柱形图数据
+    // private function fmtColumn($data){
+    //     $arr = [];
+    //     foreach ($data as $v) {
+    //         $arr['x'][] = $v['name'];
+    //         $arr['y'][] = $v['val'];
+    //     }
+    //     return $arr;
+    // }
 
     /* 整理各部门订单汇总
         [0] => Array

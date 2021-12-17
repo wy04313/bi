@@ -57,6 +57,7 @@ class MinuteTask implements TaskInterface
             ");
 
         $redis->select(15);
+        $total_in_today = $total_in_today ? $this->fmtColumn($total_in_today) : [];
         $redis->set('total_in_todays', json_encode($total_in_today, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
         $redis->mSet(compact('total_in_all','total_in_year','total_in_year_title'));
@@ -71,6 +72,16 @@ class MinuteTask implements TaskInterface
             }
         }
 
+    }
+
+    // 整理柱形图数据
+    private function fmtColumn($data){
+        $arr = [];
+        foreach ($data as $v) {
+            $arr['x'][] = $v['name'];
+            $arr['y'][] = (INT)$v['val'];
+        }
+        return $arr;
     }
 
     private function getAllFromU8($sql){
