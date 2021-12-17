@@ -80,6 +80,7 @@ class Mysql
 
         //今天入库记录
         if(in_array('total_in_todays', $subData)) {
+print_r(json_decode($redis->get('total_in_todays')));
             $data['total_in_todays'] = $this->fmtColumn(json_decode($redis->get('total_in_todays')));
         }
 
