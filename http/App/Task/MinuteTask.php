@@ -54,7 +54,7 @@ class MinuteTask implements TaskInterface
 
         $total_in_today = $this->getAllFromU8("
                SELECT s.cInvCode name,s.iQuantity val FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID WHERE {$field} = '{$today}'
-            ");
+            ", true);
 print_r($total_in_today);
         $redis->select(15);
         $total_in_today = $total_in_today ? $this->fmtColumn($total_in_today) : [];
@@ -84,10 +84,10 @@ print_r($total_in_today);
         return $arr;
     }
 
-    private function getAllFromU8($sql){
+    private function getAllFromU8($sql,$isArr = false){
         $conn = new \PDO("sqlsrv:server=10.0.6.218;database=UFDATA_102_2021","sa","abc@123");
         $res = $conn->query($sql);
-        return $res->fetch(\PDO::FETCH_ASSOC);
+        return $isArr === false ? $res->fetch(\PDO::FETCH_ASSOC) : $res->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     private function getNowLine($cost_type){
