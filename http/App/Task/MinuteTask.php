@@ -55,7 +55,6 @@ class MinuteTask implements TaskInterface
         $total_in_today = $this->getAllFromU8("
                SELECT s.cInvCode name,s.iQuantity val FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID WHERE {$field} = '{$today}'
             ", true);
-print_r($total_in_today);
         $redis->select(15);
         $total_in_today = $total_in_today ? $this->fmtColumn($total_in_today) : [];
         $redis->set('total_in_todays', json_encode($total_in_today, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
