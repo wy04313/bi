@@ -1,6 +1,24 @@
 <?php
 date_default_timezone_set('Asia/Shanghai');
 
+
+
+print_r(json_decode('[]', true));die;
+
+$a = [
+    // ['name' => 'wang','age' => 20],
+    // ['name' => 'lou','age' => 30],
+];
+
+print_r(json_encode($a, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));die;
+print_r(array_sum(array_column($a, 'age')));
+
+
+
+
+
+
+die;
 $a = 'J00044,J00045,J00035,J00086,J00090,J00024,J00025,J00021,J00022,J00062,J00085,J00089,J00091,J00070,J00069,J00068,J00067,J00071,J00026,J00027,J00053,J00055,J00051,J00054,J00052';
 
 $b = array_map(function($v){

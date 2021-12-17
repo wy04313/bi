@@ -53,13 +53,13 @@ class MinuteTask implements TaskInterface
         $total_in_year_title = date('Y')."年度入库总量";
 
         $total_in_today = $this->getAllFromU8("
-            SELECT ISNULL(sum(s.iQuantity), 0) as cnt FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID WHERE {$field} = '{$today}'
+               SELECT s.cInvCode name,s.iQuantity val FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID WHERE {$field} = '{$today}'
             ");
-        $total_in_today = (INT)$total_in_today['cnt'];
-        $redis->select(15);
-        $redis->lset('total_in_todays', 0, $total_in_today);
-        $redis->mSet(compact('total_in_all','total_in_year','total_in_year_title'));
 
+        $redis->select(15);
+        // $redis->set('total_in_todays', json_encode($total_in_today, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        $redis->mSet(compact('total_in_all','total_in_year','total_in_year_title'));
 
         \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
 
@@ -73,16 +73,11 @@ class MinuteTask implements TaskInterface
 
     }
 
-
     private function getAllFromU8($sql){
         $conn = new \PDO("sqlsrv:server=10.0.6.218;database=UFDATA_102_2021","sa","abc@123");
         $res = $conn->query($sql);
         return $res->fetch(\PDO::FETCH_ASSOC);
     }
-
-
-
-
 
     private function getNowLine($cost_type){
         /*

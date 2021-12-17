@@ -16,18 +16,6 @@ class Fuck implements TaskInterface
     {
         go(function (){
             $redis = \EasySwoole\Pool\Manager::getInstance()->get('redis')->getObj();
-
-
-
-
-
-
-
-
-
-
-
-
             \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
         });
 

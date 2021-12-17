@@ -78,10 +78,9 @@ class Mysql
             $data['watt_meter_weeks']['y'] = $this->fmtWattMeter($redis->lrange('watt_meter_weeks', 0, 7));
         }
 
-        // 7日入库记录
+        //今天入库记录
         if(in_array('total_in_todays', $subData)) {
-            $data['total_in_todays']['x'] = $this->fmtWeeks($redis->lrange('weeks', 0, 6));
-            $data['total_in_todays']['y'] = $redis->lrange('total_in_todays', 0, 6);
+            $data['total_in_todays'] = $this->fmtColumn(json_decode($redis->get('total_in_todays')));
         }
 
         // 应到,实到人数和3个圆形图
@@ -118,8 +117,13 @@ class Mysql
                 $tmp['line_3307_block_b3']
             ]);//不良警报
 
-            $data['block_data']['total_in_today'] = $redis->LINDEX('total_in_todays', 0);
-             //今日入库总计 total_in_todays
+            // $data['block_data']['total_in_today'] = $redis->LINDEX('total_in_todays', 0);
+            //今日入库总计 total_in_todays
+            $total_in_todays = json_decode($redis->get('total_in_todays'), true);
+            $data['block_data']['total_in_today'] = $total_in_todays ? array_sum(array_column($total_in_todays, 'val')) : [];
+
+
+
             $data['block_data']['total_in_year'] = $tmp['total_in_year']; //今年入库总计
             $data['block_data']['total_in_year_title'] = $tmp['total_in_year_title']; //今年入库总计标题
             $data['block_data']['total_in_all'] = $tmp['total_in_all']; //入库总计
@@ -148,6 +152,15 @@ class Mysql
         \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
 
         return $data;
+    }
+
+    // 整理柱形图数据
+    private function fmtColumn($data){
+        $arr = [];
+        foreach ($data as $v) {
+            $arr[]['x'] = $v['name'];
+            $arr[]['y'] = $v['val'];
+        }
     }
 
     /* 整理各部门订单汇总
@@ -184,7 +197,7 @@ class Mysql
             'less_material', // 物料缺失的滚动数据
             'watt_meter_weeks', // 近七日用电量
             'block_data', // 卡片数据
-            'total_in_todays', // 近7日入库统计
+            'total_in_todays', // 今日入库统计
             'equ_used', // 设备使用率
             'unover', // 未完工订单
         ];
