@@ -110,7 +110,7 @@ class EasySwooleEvent implements Event
                 });
 
                 // 每分钟执行的任务
-                \EasySwoole\Component\Timer::getInstance()->loop(6 * 1000, function () {
+                \EasySwoole\Component\Timer::getInstance()->loop(60 * 1000, function () {
                     $syncTask = \EasySwoole\EasySwoole\Task\TaskManager::getInstance();
                     $syncTask->sync(new \App\Task\MinuteTask());
                     // 考勤打卡人数

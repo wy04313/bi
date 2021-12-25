@@ -5,7 +5,7 @@ namespace App\Task;
 use EasySwoole\Task\AbstractInterface\TaskInterface;
 use App\Model\WMesTaskModel;
 use App\Model\WMesStationModel;
-// use EasySwoole\Mysqli\QueryBuilder;
+use EasySwoole\Mysqli\QueryBuilder;
 // use App\Model\WTest2021Model;
 // use App\MongoDb\Driver;
 // use App\MongoDb\MongoClient;
@@ -31,8 +31,54 @@ class MinuteTask implements TaskInterface
         });
 
         go(function (){
+            $this->getStationInfo();
+        });
+
+        go(function (){
             $this->getTotalIn();
         });
+    }
+    /*
+        SELECT DISTINCT r.main_barcode, r.station_id,s.brief_desc FROM  w_mes_relation r LEFT JOIN w_mes_station s ON r.station_id = s.id  WHERE r.created > 1639065600 and r.effect = 1
+
+        SELECT
+            count(a.station_id) AS cnt,
+            a.brief_desc
+        FROM
+            (
+            SELECT DISTINCT r.main_barcode, r.station_id,s.brief_desc FROM  w_mes_relation r LEFT JOIN w_mes_station s ON r.station_id = s.id  WHERE r.created > 1639065600 and r.effect = 1
+            ) a
+        GROUP BY
+            a.station_id
+     */
+    // 获取今天工位信息
+    private function getStationInfo(){
+        $res  = WMesTaskModel::create()->func(function ($builder){
+            return $builder->raw("
+                SELECT
+                    count(a.station_id) AS value,
+                    a.brief_desc name
+                FROM
+                    (
+                    SELECT DISTINCT r.main_barcode, r.station_id,s.brief_desc FROM  w_mes_relation r LEFT JOIN w_mes_station s ON r.station_id = s.id  WHERE r.created > 1639065600 and r.effect = 1
+                    ) a
+                GROUP BY
+                    a.station_id
+            ");
+        });
+
+        $redis = \EasySwoole\Pool\Manager::getInstance()->get('redis')->getObj();
+        $redis->select(15);
+        $redis->set('stations', json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
+
+        $users = OnlineUser::getInstance()->table();
+        $server = ServerManager::getInstance()->getSwooleServer();
+        foreach ($users as $v) {
+            if($v['page_name'] === 'total') {
+                $server->push($v['fd'], $this->writeToJson(Mysql::getInstance()->getTotalPageData('total','stations'), 'ok'));
+            }
+        }
     }
 
     // 入库总计 // SELECT ISNULL(sum(s.iQuantity), 0) as today_in FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID   WHERE r.dDate > '2021-11-23 00:00:00'
@@ -46,20 +92,29 @@ class MinuteTask implements TaskInterface
         $total_in_all = $this->getAllFromU8("SELECT sum(iQuantity) as cnt FROM rdrecords10");
         $total_in_all = (INT)$total_in_all['cnt'];
 
-        $total_in_year = $this->getAllFromU8("
-            SELECT ISNULL(sum(s.iQuantity), 0) as cnt FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID WHERE {$field} > '{$year}'
-            ");
-        $total_in_year = (INT)$total_in_year['cnt'];
-        $total_in_year_title = date('Y')."年度入库总量";
+        $total_out_all = $this->getAllFromU8("SELECT ISNULL(sum(iQuantity), 0) as cnt FROM rdrecords32");
+        $total_out_all = (INT)$total_out_all['cnt'];
+        $total_out_all_title = "成品出库总量";
 
         $total_in_today = $this->getAllFromU8("
-               SELECT s.cInvCode name,s.iQuantity val FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID WHERE {$field} = '{$today}'
+               SELECT s.cInvCode name,s.iQuantity value FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID WHERE {$field} = '2021-04-07 00:00:00'
+            ", true);
+        $total_out_today = $this->getAllFromU8("
+               SELECT s.cInvCode name,sum(s.iQuantity) value FROM rdrecord32 r left join rdrecords32 s on r.id = s.ID WHERE {$field} = '2021-04-22 00:00:00' GROUP BY s.cInvCode
             ", true);
         $redis->select(15);
         $total_in_today = $total_in_today ? $this->fmtColumn($total_in_today) : [];
-        $redis->set('total_in_todays', json_encode($total_in_today, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
-        $redis->mSet(compact('total_in_all','total_in_year','total_in_year_title'));
+        if($total_out_today) {
+            $tmp1 = $this->fmtColumn($total_out_today);
+            $tmp1['z'] = $total_out_today;
+        } else {
+            $tmp1 = '今日没有出库数据.';
+        }
+        $redis->set('total_in_todays', json_encode($total_in_today, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $redis->set('total_out_todays', json_encode($tmp1, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        $redis->mSet(compact('total_in_all','total_out_all','total_out_all_title'));
 
         \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
 
@@ -78,7 +133,7 @@ class MinuteTask implements TaskInterface
         $arr = [];
         foreach ($data as $v) {
             $arr['x'][] = $v['name'];
-            $arr['y'][] = (INT)$v['val'];
+            $arr['y'][] = (INT)$v['value'];
         }
         return $arr;
     }

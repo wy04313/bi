@@ -34,13 +34,12 @@ class Index extends Base
                     $redis->mSet($data);
                     \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
                 }
-
                 $page = 'line'.$params['cost_type'];
                 foreach ($users as $v) {
                     if($v['page_name'] === $page)
                         $server->push($v['fd'], $this->writeToJson(Mysql::getInstance()->getLinePageData($page,'block_data'), 'ok'));
                     else
-                        $server->push($v['fd'], $this->writeToJson(Mysql::getInstance()->getTotalPageData('total','dashboard,watt_meter_weeks'), 'ok'));
+                        $server->push($v['fd'], $this->writeToJson(Mysql::getInstance()->getTotalPageData('total','dashboard,block_data,watt_meter_weeks')));
 
                 }
                 break;
@@ -57,9 +56,11 @@ class Index extends Base
                 $redis->LINDEX('watt_meter_weeks', $db); //当前度数
 
                 \EasySwoole\Pool\Manager::getInstance()->get('redis')->recycleObj($redis);
+
+                $pData = Mysql::getInstance()->getTotalPageData('total','dashboard,watt_meter_weeks');
                 foreach ($users as $v) {
                     if($v['page_name'] === 'total')
-                        $server->push($v['fd'],$this->writeToJson(Mysql::getInstance()->getTotalPageData('total','dashboard,watt_meter_weeks', 'ok')));
+                        $server->push($v['fd'],$this->writeToJson($pData));
                 }
                 break;
 

@@ -12,6 +12,10 @@ class Mysql
     /*新进页面,获取数据,可能是页面,也可能是一部分数据
         兵熊熊一个，将熊熊一窝,将帅无能,累死三军
         一次页面全部信息推送,服务器很强大,能跑就行,没事,
+        b2 温度
+        b7 湿度
+        b6 不良品数量
+        b8 良品率
      */
     public function getPageData($page_name){
         switch ($page_name) {
@@ -25,12 +29,17 @@ class Mysql
         }
     }
 
+    private function avg($arr){
+        return round(array_sum($arr)/count($arr),2);
+    }
+
     // total 页面数据
     public function getTotalPageData($page_name,$sub = null){
         $subData = $sub === null ? $this->definetotalSubData() : explode(',', $sub);
         $field = []; //待取字段
-        if(in_array('dashboard', $subData))
-            $field = array_merge($field, ['total_wd','total_sd', 'total_yield_rate','total_power']);
+        if(in_array('dashboard', $subData)) // 温度为b2,湿度b7,中台取三个车间平均值
+            $field = array_merge($field, ['line_3305_block_b2','line_3307_block_b2','line_3302_block_b2','line_3305_block_b7','line_3307_block_b7','line_3302_block_b7', 'total_yield_rate','total_power']);
+        if(in_array('stations', $subData)) $field[] = 'stations';
         if(in_array('less_material', $subData)) $field[] = 'less_material';
         if(in_array('watt_meter_weeks', $subData))
             $field = array_merge($field, ['weeks','watt_meter_weeks']);
@@ -40,9 +49,11 @@ class Mysql
             $field = array_merge($field, [
                 'line_3302_block_b0','line_3302_block_b1','line_3302_block_b3',
                 'line_3305_block_b0','line_3305_block_b1','line_3305_block_b3',
-                // 'line_3306_block_b0','line_3306_block_b1','line_3306_block_b3',
                 'line_3307_block_b0','line_3307_block_b1','line_3307_block_b3',
-                'total_in_year','total_in_year_title','total_in_all'
+                'line_3302_block_b8',
+                'line_3305_block_b8',
+                'line_3307_block_b8',
+                'total_out_all','total_out_all_title','total_in_all','today_bad'
                 ]);
 
         if(in_array('unover', $subData))
@@ -66,8 +77,10 @@ class Mysql
         if(in_array('dashboard', $subData))
             $data['dashboard'] = [
                 'yield_rate' => $tmp['total_yield_rate'], //良品率
-                'wd' => $tmp['total_wd'], //温度
-                'sd' => $tmp['total_sd'], //湿度
+                // 'wd' => $tmp['total_wd'], //温度
+                // 'sd' => $tmp['total_sd'], //湿度
+                'wd' => $this->avg([$tmp['line_3302_block_b2'],$tmp['line_3305_block_b2'],$tmp['line_3307_block_b2']]), //温度
+                'sd' => $this->avg([$tmp['line_3302_block_b7'],$tmp['line_3305_block_b7'],$tmp['line_3307_block_b7']]), //湿度
                 'power' => $redis->LINDEX('watt_meter_weeks', 0), //电表度数
             ];
         if(in_array('less_material', $subData))
@@ -81,6 +94,11 @@ class Mysql
         //今天入库记录
         if(in_array('total_in_todays', $subData)) {
             $data['total_in_todays'] = json_decode($redis->get('total_in_todays'), true);
+        }
+
+        //今天出库记录
+        if(in_array('total_out_todays', $subData)) {
+            $data['total_out_todays'] = json_decode($redis->get('total_out_todays'), true);
         }
 
         // 应到,实到人数和3个圆形图
@@ -117,15 +135,14 @@ class Mysql
                 $tmp['line_3307_block_b3']
             ]);//不良警报
 
+            $data['block_data']['today_bad'] = array_sum([$tmp['line_3302_block_b8'],$tmp['line_3305_block_b8'],$tmp['line_3307_block_b8']]);//今日不良品
+
             // $data['block_data']['total_in_today'] = $redis->LINDEX('total_in_todays', 0);
             //今日入库总计 total_in_todays
             $total_in_todays = json_decode($redis->get('total_in_todays'), true);
-            $data['block_data']['total_in_today'] = $total_in_todays ? array_sum(array_column($total_in_todays, 'val')) : [];
 
-
-
-            $data['block_data']['total_in_year'] = $tmp['total_in_year']; //今年入库总计
-            $data['block_data']['total_in_year_title'] = $tmp['total_in_year_title']; //今年入库总计标题
+            $data['block_data']['total_out_all'] = $tmp['total_out_all']; //今年入库总计
+            $data['block_data']['total_out_all_title'] = $tmp['total_out_all_title']; //今年出库总计标题
             $data['block_data']['total_in_all'] = $tmp['total_in_all']; //入库总计
         }
 
@@ -133,6 +150,11 @@ class Mysql
         if(in_array('equ_used', $subData)) {
             $data['equ_used']['name'] = explode(',',$tmp['total_equ_used_name']);
             $data['equ_used']['value'] = explode(',', $tmp['total_equ_used_value']);
+        }
+
+        // 当前工位信息
+        if(in_array('stations', $subData)) {
+            $data['stations'] = json_decode($tmp['stations'], true);
         }
 
         // 未完工订单
@@ -153,16 +175,6 @@ class Mysql
 
         return $data;
     }
-
-    // // 整理柱形图数据
-    // private function fmtColumn($data){
-    //     $arr = [];
-    //     foreach ($data as $v) {
-    //         $arr['x'][] = $v['name'];
-    //         $arr['y'][] = $v['val'];
-    //     }
-    //     return $arr;
-    // }
 
     /* 整理各部门订单汇总
         [0] => Array
@@ -199,8 +211,10 @@ class Mysql
             'watt_meter_weeks', // 近七日用电量
             'block_data', // 卡片数据
             'total_in_todays', // 今日入库统计
+            'total_out_todays', // 今日出库统计
             'equ_used', // 设备使用率
             'unover', // 未完工订单
+            'stations', // 当前工位信息
         ];
     }
 

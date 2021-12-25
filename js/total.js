@@ -6,7 +6,7 @@
   // echarts_32();
   // echarts_33();
   // echarts_5({x:['浙江', '上海', '江苏', '广东', '北京', '深圳', '安徽', '四川'],y:[2, 3, 3, 9, 15, 12, 6, 4, 6, 7, 4, 10]});
-  echarts_6();
+  // echarts_6();
   // progress_bar({name:['CDU产线', 'HVB产线', 'EDU产线', 'VPU产线', 'UNK产线','FUK产线'],value:[80,40,60,99,80,90]});
 
     var lockReconnect = false;//避免重复连接
@@ -42,7 +42,7 @@
             createWebSocket(wsUrl);
             console.log("正在重连......")
             reconnect.lockReconnect = false;
-        }, 30000); //这里设置重连间隔(ms)
+        }, 3000); //这里设置重连间隔(ms)
     }
 
      /*********************初始化开始**********************/
@@ -113,6 +113,7 @@
     }
 
     function doCase(res){
+        console.log(res);
         switch(res.case) {
             case 'ok':
                 if(typeof(res.data.fd) !== 'undefined') $('#fd').html('(' + res.data.fd + ')');
@@ -128,10 +129,12 @@
                 if(typeof(res.data.roll) !== 'undefined') addRoll(res.data.roll.list);
                 if(typeof(res.data.total_in_todays) !== 'undefined') echarts_5(res.data.total_in_todays);
                 if(typeof(res.data.equ_used) !== 'undefined') progress_bar(res.data.equ_used);
-                if(typeof(res.data.unover) !== 'undefined') trend_chart(res.data.unover);
+                if(typeof(res.data.stations) !== 'undefined') trend_chart(res.data.stations);
 
 
-
+                if(typeof(res.data.total_out_todays) !== 'undefined') {
+                    echarts_6(res.data.total_out_todays);
+                }
 
 
                 // if(typeof(res.data.today_task) !== 'undefined') draw_lb(res.data.today_task);
@@ -172,9 +175,9 @@
         $('#total_b0').html(res.total_b0);
         $('#total_b1').html(res.total_b1);
         $('#total_b3').html(res.total_b3);
-        $('#total_in_today').html(res.total_in_today);
-        $('#total_in_year').html(res.total_in_year);
-        $('#total_in_year_title').html(res.total_in_year_title);
+        $('#today_bad').html(res.today_bad);
+        $('#total_out_all').html(res.total_out_all);
+        $('#total_out_all_title').html(res.total_out_all_title);
         $('#total_in_all').html(res.total_in_all);
     }
 
@@ -219,7 +222,7 @@
         option = {
             // backgroundColor: '#1b1b1b',
             tooltip : {
-                formatter: "{a} <br/>{c} {b}"
+                formatter: "{a}<br/>{c} {b}"
             },
             series : [
                 {
@@ -612,93 +615,93 @@ function seven_days(res) {
         });
     }
 function echarts_5(res) {
-        // 基于准备好的dom，初始化echarts实例
-        var myChart = echarts.init(document.getElementById('echart5'));
-
-       option = {
-  //  backgroundColor: '#00265f',
-    tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-            type: 'shadow'
-        }
-    },
-
-    grid: {
-        left: '0%',
-		top:'10px',
-        right: '0%',
-        bottom: '2%',
-       containLabel: true
-    },
-    xAxis: [{
-        type: 'category',
-      		data: res.x,
-        axisLine: {
-            show: true,
-         lineStyle: {
-                color: "rgba(255,255,255,.1)",
-                width: 1,
-                type: "solid"
+// console.log(res);
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('echart5'));
+    option = {
+        //  backgroundColor: '#00265f',
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
             },
-        },
 
-        axisTick: {
-            show: false,
-        },
-		axisLabel:  {
-                interval: 0,
-               // rotate:50,
-                show: true,
-                splitNumber: 15,
-                textStyle: {
- 					color: "rgba(255,255,255,.6)",
-                    fontSize: '12',
+            grid: {
+                left: '0%',
+        		top:'10px',
+                right: '0%',
+                bottom: '2%',
+               containLabel: true
+            },
+            xAxis: [{
+                type: 'category',
+              		data: res.x,
+                axisLine: {
+                    show: true,
+                 lineStyle: {
+                        color: "rgba(255,255,255,.1)",
+                        width: 1,
+                        type: "solid"
+                    },
                 },
-            },
-    }],
-    yAxis: [{
-        type: 'value',
-        axisLabel: {
-           //formatter: '{value} %'
-			show:true,
-			 textStyle: {
- 					color: "rgba(255,255,255,.6)",
-                    fontSize: '12',
+
+                axisTick: {
+                    show: false,
                 },
-        },
-        axisTick: {
-            show: false,
-        },
-        axisLine: {
-            show: true,
-            lineStyle: {
-                color: "rgba(255,255,255,.1	)",
-                width: 1,
-                type: "solid"
-            },
-        },
-        splitLine: {
-            lineStyle: {
-               color: "rgba(255,255,255,.1)",
+        		axisLabel:  {
+                        interval: 0,
+                       // rotate:50,
+                        show: true,
+                        splitNumber: 15,
+                        textStyle: {
+         					color: "rgba(255,255,255,.6)",
+                            fontSize: '12',
+                        },
+                    },
+            }],
+            yAxis: [{
+                type: 'value',
+                axisLabel: {
+                   //formatter: '{value} %'
+        			show:true,
+        			 textStyle: {
+         					color: "rgba(255,255,255,.6)",
+                            fontSize: '12',
+                        },
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,.1	)",
+                        width: 1,
+                        type: "solid"
+                    },
+                },
+                splitLine: {
+                    lineStyle: {
+                       color: "rgba(255,255,255,.1)",
+                    }
+                }
+            }],
+            series: [{
+                type: 'bar',
+                data: res.y,
+                barWidth:'35%', //柱子宽度
+               // barGap: 1, //柱子之间间距
+                itemStyle: {
+                    normal: {
+                        color:'#2f89cf',
+                        opacity: 1,
+        				barBorderRadius: 5,
+                    }
+                }
             }
-        }
-    }],
-    series: [{
-        type: 'bar',
-        data: res.y,
-        barWidth:'35%', //柱子宽度
-       // barGap: 1, //柱子之间间距
-        itemStyle: {
-            normal: {
-                color:'#2f89cf',
-                opacity: 1,
-				barBorderRadius: 5,
-            }
-        }
-    }
-	]
-};
+        	]
+        };
 
         // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
@@ -707,302 +710,64 @@ function echarts_5(res) {
         });
     }
 
-function trend_chart(res) {
+    function trend_chart(res) {
         // 基于准备好的dom，初始化echarts实例
         var myChart = echarts.init(document.getElementById('echart4'));
+        var giftImageUrl = "data:image/png;base64,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";
         option = {
-    	    tooltip: {
-            trigger: 'axis',
-            axisPointer: {
-                lineStyle: {
-                    color: '#dddc6b'
-                }
-            }
-        },
-    		    legend: {
-        top:'0%',
-            data:['计划','实际'],
-                    textStyle: {
-               color: 'rgba(255,255,255,.5)',
-    			fontSize:'12',
-            }
-        },
-        grid: {
-            // show:true, //是否显示直角坐标系网格。[ default: false ]
-            left: '5',
-    		top: '30',
-            right: '5',
-            bottom: '1',
-            // borderColor:"#c45455"
-            containLabel: true
-        },
-        xAxis: [{
-            type: 'category',
-            boundaryGap: false,
-            axisLabel:  {
-                    textStyle: {
-     					color: "rgba(255,255,255,.6)",
-    					fontSize:12,
+            graphic: {
+                elements: [{
+                    type: 'image',
+                    style: {
+                        image: giftImageUrl,
+                        width: 30,
+                        height: 30
                     },
-                },
-            axisLine: {
-    			lineStyle: {
-    				color: 'rgba(255,255,255,.2)'
-    			}
-
+                    left: '48%',
+                    top: 'center'
+                }]
             },
-            axisLabel: {
-                interval:0,
-                rotate:60
-            },
-            data: res.name
-
-        }, {
-            axisPointer: {show: false},
-            axisLine: {  show: false},
-            position: 'bottom',
-            offset: 20,
-        }],
-
-        yAxis: [{
-            type: 'value',
-            axisTick: {show: false},
-            axisLine: {
-                lineStyle: {
-                    color: 'rgba(255,255,255,.1)'
-                }
-            },
-           axisLabel:  {
-                    textStyle: {
-     					color: "rgba(255,255,255,.6)",
-    					fontSize:12,
-                    },
-                },
-
-            splitLine: {
-                lineStyle: {
-                     color: 'rgba(255,255,255,.1)'
-                }
-            }
-        }],
-        series: [
-    		{
-            name: '计划',
-            type: 'line',
-             smooth: true,
-            symbol: 'circle',
-            symbolSize: 5,
-            showSymbol: false,
-            lineStyle: {
-
-                normal: {
-    				color: '#0184d5',
-                    width: 2
-                }
-            },
-            areaStyle: {
-                normal: {
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                        offset: 0,
-                        color: 'rgba(1, 132, 213, 0.4)'
-                    }, {
-                        offset: 0.8,
-                        color: 'rgba(1, 132, 213, 0.1)'
-                    }], false),
-                    shadowColor: 'rgba(0, 0, 0, 0.1)',
-                }
-            },
-    			itemStyle: {
-    			normal: {
-    				color: '#0184d5',
-    				borderColor: 'rgba(221, 220, 107, .1)',
-    				borderWidth: 12
-    			}
-    		},
-            data: res.v1
-
-        },
-        {
-            name: '实际',
-            type: 'line',
-            smooth: true,
-            symbol: 'circle',
-            symbolSize: 5,
-            showSymbol: false,
-            lineStyle: {
-
-                normal: {
-    				color: '#00d887',
-                    width: 2
-                }
-            },
-            areaStyle: {
-                normal: {
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                        offset: 0,
-                        color: 'rgba(0, 216, 135, 0.4)'
-                    }, {
-                        offset: 0.8,
-                        color: 'rgba(0, 216, 135, 0.1)'
-                    }], false),
-                    shadowColor: 'rgba(0, 0, 0, 0.1)',
-                }
-            },
-    			itemStyle: {
-    			normal: {
-    				color: '#00d887',
-    				borderColor: 'rgba(221, 220, 107, .1)',
-    				borderWidth: 12
-    			}
-    		},
-            data: res.v2
-
-        },
-
-    	]};
-
-        // 使用刚指定的配置项和数据显示图表。
-        myChart.setOption(option);
-        window.addEventListener("resize",function(){
-            myChart.resize();
-        });
-    }
-function echarts_6() {
-    // 基于准备好的dom，初始化echarts实例
-    var myChart = echarts.init(document.getElementById('echart6'));
-
-    var dataStyle = {
-    	normal: {
-    		label: {
-    			show: false
-    		},
-    		labelLine: {
-    			show: false
-    		},
-    		//shadowBlur: 40,
-    		//shadowColor: 'rgba(40, 40, 40, 1)',
-    	}
-    };
-    var placeHolderStyle = {
-    	normal: {
-    		color: 'rgba(255,255,255,.05)',
-    		label: {show: false,},
-    		labelLine: {show: false}
-    	},
-    	emphasis: {
-    		color: 'rgba(0,0,0,0)'
-    	}
-    };
-    option = {
-    	color: ['#0f63d6', '#0f78d6', '#0f8cd6', '#0fa0d6', '#0fb4d6'],
-    	tooltip: {
-    		show: true,
-    		formatter: "{a} : {c} "
-    	},
-    	legend: {
-    		itemWidth: 10,
-            itemHeight: 10,
-    		itemGap: 12,
-    		bottom: '3%',
-
-    		data: ['浙江', '上海', '广东', '北京', '深圳'],
-    		textStyle: {
-                        color: 'rgba(255,255,255,.6)',
+            series: [{
+                type: 'pie',
+                radius: [45, '80%'],
+                center: ['50%', '50%'],
+                roseType: 'radius',
+                color: [ '#C1232B','#B5C334','#FCCE10','#E87C25','#27727B',
+                '#FE8463','#9BCA63','#FAD860','#F3A43B','#60C0DD',
+                '#D7504B','#C6E579','#F4E001','#F0805A','#26C0C0'],
+                data: res,
+                label: {
+                    normal: {
+                        textStyle: {
+                            fontSize: 14
+                        },
+                        formatter: function(param) {
+                            return param.name + ':\n' + param.value + 'pcs(' + Math.round(param.percent) + '%)';
+                        }
                     }
-    	},
+                },
+                labelLine: {
+                    normal: {
+                        smooth: true,
+                        lineStyle: {
+                            width: 2
+                        }
+                    }
+                },
+                itemStyle: {
+                    normal: {
+                        shadowBlur: 30,
+                        shadowColor: 'rgba(0, 0, 0, 0.4)'
+                    }
+                },
 
-    	series: [
-    		{
-    		name: '浙江',
-    		type: 'pie',
-    		clockWise: false,
-    		center: ['50%', '42%'],
-    		radius: ['59%', '70%'],
-    		itemStyle: dataStyle,
-    		hoverAnimation: false,
-    		data: [{
-    			value: 80,
-    			name: '01'
-    		}, {
-    			value: 20,
-    			name: 'invisible',
-    			tooltip: {show: false},
-    			itemStyle: placeHolderStyle
-    		}]
-    	},
-    		{
-    		name: '上海',
-    		type: 'pie',
-    		clockWise: false,
-    		center: ['50%', '42%'],
-    		radius: ['49%', '60%'],
-    		itemStyle: dataStyle,
-    		hoverAnimation: false,
-    		data: [{
-    			value: 70,
-    			name: '02'
-    		}, {
-    			value: 30,
-    			name: 'invisible',
-    			tooltip: {show: false},
-    			itemStyle: placeHolderStyle
-    		}]
-    	},
-    		{
-    		name: '广东',
-    		type: 'pie',
-    		clockWise: false,
-    		hoverAnimation: false,
-    		center: ['50%', '42%'],
-    		radius: ['39%', '50%'],
-    		itemStyle: dataStyle,
-    		data: [{
-    			value: 65,
-    			name: '03'
-    		}, {
-    			value: 35,
-    			name: 'invisible',
-    			tooltip: {show: false},
-    			itemStyle: placeHolderStyle
-    		}]
-    	},
-    		{
-    		name: '北京',
-    		type: 'pie',
-    		clockWise: false,
-    		hoverAnimation: false,
-    		center: ['50%', '42%'],
-    		radius: ['29%', '40%'],
-    		itemStyle: dataStyle,
-    		data: [{
-    			value: 60,
-    			name: '04'
-    		}, {
-    			value: 40,
-    			name: 'invisible',
-    			tooltip: {show: false},
-    			itemStyle: placeHolderStyle
-    		}]
-    	},
-    		{
-    		name: '深圳',
-    		type: 'pie',
-    		clockWise: false,
-    		hoverAnimation: false,
-    		center: ['50%', '42%'],
-    		radius: ['20%', '30%'],
-    		itemStyle: dataStyle,
-    		data: [{
-    			value: 50,
-    			name: '05'
-    		}, {
-    			value: 50,
-    			name: 'invisible',
-    			tooltip: {show: false},
-    			itemStyle: placeHolderStyle
-    		}]
-    	}, ]
-    };
+                animationType: 'scale',
+                animationEasing: 'elasticOut',
+                animationDelay: function(idx) {
+                    return Math.random() * 200;
+                }
+            }]
+        };
 
         // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
@@ -1010,6 +775,103 @@ function echarts_6() {
             myChart.resize();
         });
     }
+
+    // 出库
+    function echarts_6(res) {
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('echart6'));
+        option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            legend: {
+                data: ['销售额'],
+                left:'27%'
+            },
+            grid: {
+                left: '1%',
+                right: '2%',
+                top: '10%',
+                bottom: '10%',
+                containLabel: true,
+            },
+            xAxis: {
+                type: 'value',
+                position:'top',
+                splitLine: {show: false},
+                boundaryGap: [0, 0.01],
+                axisTick: {
+                    show: false
+                },
+                axisLabel: {
+                    textStyle: {
+                        color: '#9ea7c4',
+                        fontSize: 12
+                    }
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: '#6173A3'
+                    }
+                },
+            },
+            yAxis: {
+                type: 'category',
+                // data: ['VPU118C','VPU228A','HVB','EDU','CDU223'],
+                data: res.x,
+                axisTick: {
+                    show: false
+                },
+                splitLine: {
+                    show: false
+                },
+                axisLabel: {
+                    textStyle: {
+                        color: '#9ea7c4',
+                        fontSize: 12
+                    }
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: '#6173A3'
+                    }
+                },
+            },
+            series: [
+            {
+                name: '',
+                itemStyle: {
+                    normal: {
+                        color: function(params) {
+                            // build a color map as your need.
+                            var colorList = [
+                                '#C1232B','#B5C334','#FCCE10','#E87C25','#27727B',
+                                '#FE8463','#9BCA63','#FAD860','#F3A43B','#60C0DD',
+                                '#D7504B','#C6E579','#F4E001','#F0805A','#26C0C0'
+                            ];
+                            return colorList[params.dataIndex]
+                        },
+                        shadowBlur: 20,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                },
+                type: 'bar',
+                data: res.y
+            }]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+        window.addEventListener("resize",function(){
+            myChart.resize();
+        });
+    }
+
 function echarts_31(res) {
     // 基于准备好的dom，初始化echarts实例
     var myChart = echarts.init(document.getElementById('fb1'));
@@ -1169,7 +1031,7 @@ function progress_bar(res){
     // 指定图表的配置项和数据
     option = {
         title: {
-            text: '设备/软件正常使用时间占比',
+            text: '设备稼动率',
             x: 'center',
             textStyle: {
                 color: '#FFF'

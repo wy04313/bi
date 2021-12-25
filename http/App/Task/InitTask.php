@@ -69,8 +69,11 @@ class InitTask extends AbstractCronTask
 
             $data['line_'.$v.'_block_b3'] = 0; //今日警报
             $data['line_'.$v.'_block_b3_last_updated'] = date('m/d H:i');
-        }
 
+            $data['line_'.$v.'_block_b2'] = 0; //温度
+            $data['line_'.$v.'_block_b7'] = 0; //湿度
+            $data['line_'.$v.'_block_b8'] = 0; //良心率
+        }
 
         //总人数
         $data['user_total'] = count($yd3302) + count($yd3305) + count($yd3307);

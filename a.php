@@ -2,7 +2,7 @@
 date_default_timezone_set('Asia/Shanghai');
 
 
-
+echo strtotime('2021-12-10');die;
 print_r(json_decode('[]', true));die;
 
 $a = [
