@@ -60,7 +60,7 @@ class MinuteTask implements TaskInterface
                     a.brief_desc name
                 FROM
                     (
-                    SELECT DISTINCT r.main_barcode, r.station_id,s.brief_desc FROM  w_mes_relation r LEFT JOIN w_mes_station s ON r.station_id = s.id  WHERE r.created > 1639065600 and r.effect = 1
+                    SELECT DISTINCT r.main_barcode, r.station_id,s.brief_desc FROM  w_mes_relation r LEFT JOIN w_mes_station s ON r.station_id = s.id  WHERE r.created > ".time()." and r.effect = 1
                     ) a
                 GROUP BY
                     a.station_id
@@ -97,10 +97,10 @@ class MinuteTask implements TaskInterface
         $total_out_all_title = "成品出库总量";
 
         $total_in_today = $this->getAllFromU8("
-               SELECT s.cInvCode name,s.iQuantity value FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID WHERE {$field} = '2021-04-07 00:00:00'
+               SELECT s.cInvCode name,s.iQuantity value FROM rdrecord10 r left join rdrecords10 s on r.id = s.ID WHERE {$field} = '{$today}'
             ", true);
         $total_out_today = $this->getAllFromU8("
-               SELECT s.cInvCode name,sum(s.iQuantity) value FROM rdrecord32 r left join rdrecords32 s on r.id = s.ID WHERE {$field} = '2021-04-22 00:00:00' GROUP BY s.cInvCode
+               SELECT s.cInvCode name,sum(s.iQuantity) value FROM rdrecord32 r left join rdrecords32 s on r.id = s.ID WHERE {$field} = '{$today}' GROUP BY s.cInvCode
             ", true);
         $redis->select(15);
         $total_in_today = $total_in_today ? $this->fmtColumn($total_in_today) : [];
